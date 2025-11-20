@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  flight-db:
+    image: postgres:16
+    container_name: flight-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - flight-db-data:/var/lib/postgresql/data
+
+  flight-service:
+    build:
+      context: .
+      dockerfile: flight-service/Dockerfile
+    container_name: flight-service
+    depends_on:
+      - flight-db
+    environment:
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SERVER_PORT: ${SERVER_PORT}
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
+
+volumes:
+  flight-db-data:

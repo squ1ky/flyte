@@ -1,0 +1,47 @@
+### Maven / Java
+target/
+*/target/**
+*.log
+*.out
+*.tmp
+
+# Maven wrapper junk (если используешь)
+.mvn/
+!/.mvn/wrapper/maven-wrapper.jar
+mvnw
+mvnw.cmd
+
+### Java / компиляция
+*.class
+*.jar
+*.war
+*.ear
+
+### IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+### Eclipse / STS
+.project
+.classpath
+.settings/
+.springBeans
+.sts4-cache
+
+### VS Code
+.vscode/
+
+### OS-specific
+# macOS
+.DS_Store
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+### Docker
+*.pid
+*.seed
+*.swp

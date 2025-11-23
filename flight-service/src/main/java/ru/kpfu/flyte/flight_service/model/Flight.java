@@ -1,9 +1,7 @@
 package ru.kpfu.flyte.flight_service.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -22,9 +20,11 @@ import java.time.LocalDateTime;
                         columnList = "aircraft_id")
         }
 )
-@NoArgsConstructor
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Flight {
 
     @Id

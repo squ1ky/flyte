@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package user;
+
+option go_package = "github.com/squ1ky/flyte/gen/go/user;userv1";
+
+service UserService {
+  rpc Register (RegisterRequest) returns (RegisterResponse);
+  rpc Login (LoginRequest) returns (LoginResponse);
+  rpc ValidateToken (ValidateTokenRequest) returns (ValidateTokenResponse);
+
+  rpc GetUser (GetUserRequest) returns (GetUserResponse);
+
+  rpc AddPassenger (AddPassengerRequest) returns (AddPassengerResponse);
+  rpc GetPassengers (GetPassengersRequest) returns (GetPassengersResponse);
+}
+
+message RegisterRequest {
+  string email = 1;
+  string password = 2;
+  string phone_number = 3;
+}
+
+message RegisterResponse {
+  int64 user_id = 1;
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string token = 1;
+}
+
+message ValidateTokenRequest {
+  string token = 1;
+}
+
+message ValidateTokenResponse {
+  int64 user_id = 1;
+  string role = 2;
+  bool valid = 3;
+}
+
+message GetUserRequest {
+  int64 user_id = 1;
+}
+
+message GetUserResponse {
+  int64 id = 1;
+  string email = 2;
+  string phone_number = 3;
+  string role = 4;
+  string created_at = 5;
+}
+
+message Passenger {
+  int64 id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string middle_name = 4;
+  string birth_date = 5; // YYYY-MM-DD
+  string gender = 6;
+  string document_number = 7;
+  string document_type = 8;
+  string citizenship = 9;
+}
+
+message AddPassengerRequest {
+  int64 user_id = 1;
+  Passenger info = 2;
+}
+
+message AddPassengerResponse {
+  int64 passenger_id = 1;
+}
+
+message GetPassengersRequest {
+  int64 user_id = 1;
+}
+
+message GetPassengersResponse {
+  repeated Passenger passengers = 1;
+}

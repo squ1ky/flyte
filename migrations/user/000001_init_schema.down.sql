@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS passengers;
+DROP TABLE IF EXISTS users;

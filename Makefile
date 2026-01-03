@@ -19,3 +19,9 @@ gen-user:
 migrate-user:
 	$(MKDIR_MIGRATIONS)
 	migrate create -ext sql -dir $(MIGRATIONS_PATH) -seq $(name)
+
+run-compose:
+	docker-compose up -d --build
+
+stop-compose:
+	docker-compose down

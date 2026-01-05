@@ -1,4 +1,16 @@
 services:
+  gateway-service:
+    build:
+      context: .
+      dockerfile: deploy/gateway.Dockerfile
+    container_name: gateway
+    env_file:
+      - .env
+    depends_on:
+      - user-service
+    ports:
+      - "${GATEWAY_HTTP_PORT}:8080"
+
   user-db:
     image: postgres:15-alpine
     container_name: user-db
@@ -30,3 +42,7 @@ services:
       - "${USER_GRPC_PORT}:${USER_GRPC_PORT}"
     volumes:
       - ./migrations:/root/migrations
+
+networks:
+  flyte-network:
+    driver: bridge

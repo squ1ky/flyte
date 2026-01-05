@@ -2,12 +2,23 @@ package grpc
 
 import (
 	"context"
+	"errors"
 	userv1 "github.com/squ1ky/flyte/gen/go/user"
 	"github.com/squ1ky/flyte/internal/user/domain"
 	"github.com/squ1ky/flyte/internal/user/service"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"time"
+)
+
+const (
+	ErrEmailPasswordRequired = "email and password are required"
+	ErrTokenRequired         = "token is required"
+	ErrPassengerInfoRequired = "passenger info is required"
+
+	ErrInvalidCredentials = "invalid email or password"
+	ErrUserAlreadyExists  = "user with this email already exists"
+	ErrUserNotFound       = "user not found"
 )
 
 type Server struct {
@@ -25,11 +36,14 @@ func NewServer(auth service.Auth, passenger service.Passenger) *Server {
 
 func (s *Server) Register(ctx context.Context, req *userv1.RegisterRequest) (*userv1.RegisterResponse, error) {
 	if req.Email == "" || req.Password == "" {
-		return nil, status.Error(codes.InvalidArgument, "email and password are required")
+		return nil, status.Error(codes.InvalidArgument, ErrEmailPasswordRequired)
 	}
 
 	userID, err := s.auth.Register(ctx, req.Email, req.Password, req.PhoneNumber)
 	if err != nil {
+		if errors.Is(err, domain.ErrUserAlreadyExists) {
+			return nil, status.Error(codes.AlreadyExists, ErrUserAlreadyExists)
+		}
 		return nil, status.Errorf(codes.Internal, "failed to register user: %v", err)
 	}
 
@@ -38,12 +52,12 @@ func (s *Server) Register(ctx context.Context, req *userv1.RegisterRequest) (*us
 
 func (s *Server) Login(ctx context.Context, req *userv1.LoginRequest) (*userv1.LoginResponse, error) {
 	if req.Email == "" || req.Password == "" {
-		return nil, status.Error(codes.InvalidArgument, "email and password are required")
+		return nil, status.Error(codes.InvalidArgument, ErrEmailPasswordRequired)
 	}
 
 	token, err := s.auth.Login(ctx, req.Email, req.Password)
 	if err != nil {
-		return nil, status.Error(codes.Unauthenticated, "invalid email or password")
+		return nil, status.Error(codes.Unauthenticated, ErrInvalidCredentials)
 	}
 
 	return &userv1.LoginResponse{Token: token}, nil
@@ -51,7 +65,7 @@ func (s *Server) Login(ctx context.Context, req *userv1.LoginRequest) (*userv1.L
 
 func (s *Server) ValidateToken(ctx context.Context, req *userv1.ValidateTokenRequest) (*userv1.ValidateTokenResponse, error) {
 	if req.Token == "" {
-		return nil, status.Error(codes.InvalidArgument, "token is required")
+		return nil, status.Error(codes.InvalidArgument, ErrTokenRequired)
 	}
 
 	claims, err := s.auth.ValidateToken(ctx, req.Token)
@@ -69,7 +83,10 @@ func (s *Server) ValidateToken(ctx context.Context, req *userv1.ValidateTokenReq
 func (s *Server) GetUser(ctx context.Context, req *userv1.GetUserRequest) (*userv1.GetUserResponse, error) {
 	user, err := s.auth.GetUser(ctx, req.UserId)
 	if err != nil {
-		return nil, status.Error(codes.NotFound, "user not found")
+		if errors.Is(err, domain.ErrUserNotFound) {
+			return nil, status.Error(codes.NotFound, ErrUserNotFound)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get user: %v", err)
 	}
 
 	return &userv1.GetUserResponse{
@@ -84,7 +101,7 @@ func (s *Server) GetUser(ctx context.Context, req *userv1.GetUserRequest) (*user
 func (s *Server) AddPassenger(ctx context.Context, req *userv1.AddPassengerRequest) (*userv1.AddPassengerResponse, error) {
 	info := req.Info
 	if info == nil {
-		return nil, status.Error(codes.InvalidArgument, "passenger info is required")
+		return nil, status.Error(codes.InvalidArgument, ErrPassengerInfoRequired)
 	}
 
 	birthDate, err := time.Parse("2006-01-02", info.BirthDate)

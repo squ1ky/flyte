@@ -22,6 +22,8 @@ services:
       POSTGRES_DB: ${USER_DB_NAME}
     ports:
       - "${USER_DB_PORT_EXTERNAL}:5432"
+    volumes:
+      - user_pg_data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${USER_DB_USER} -d ${USER_DB_NAME}" ]
       interval: 5s
@@ -40,8 +42,63 @@ services:
         condition: service_healthy
     ports:
       - "${USER_GRPC_PORT}:${USER_GRPC_PORT}"
+
+  flight-db:
+    image: postgres:15-alpine
+    container_name: flight-db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${FLIGHT_DB_USER}
+      POSTGRES_PASSWORD: ${FLIGHT_DB_PASSWORD}
+      POSTGRES_DB: ${FLIGHT_DB_NAME}
+    ports:
+      - "${FLIGHT_DB_PORT_EXTERNAL}:5432"
     volumes:
-      - ./migrations:/root/migrations
+      - flight_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${FLIGHT_DB_USER} -d ${FLIGHT_DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
+    container_name: elasticsearch
+    environment:
+      - node.name=elasticsearch
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ports:
+      - "${ELASTIC_PORT}:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  flight-service:
+    build:
+      context: .
+      dockerfile: deploy/flight.Dockerfile
+    container_name: flight-service
+    env_file:
+      - .env
+    depends_on:
+      flight-db:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    ports:
+      - "${FLIGHT_GRPC_PORT}:${FLIGHT_GRPC_PORT}"
+
+volumes:
+  user_pg_data:
+  flight_pg_data:
+  es_data:
 
 networks:
   flyte-network:

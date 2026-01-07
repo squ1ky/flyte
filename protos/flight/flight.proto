@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package flight;
+
+option go_package = "github.com/squ1ky/flyte/gen/go/flight;flightv1";
+
+import "google/protobuf/timestamp.proto";
+
+service FlightService {
+  rpc SearchFlights (SearchFlightsRequest) returns (SearchFlightsResponse);
+  rpc GetFlightDetails (GetFlightDetailsRequest) returns (GetFlightDetailsResponse);
+  rpc GetFlightSeats (GetFlightSeatsRequest) returns (GetFlightSeatsResponse);
+  rpc ListAirports (ListAirportsRequest) returns (ListAirportsResponse);
+
+  rpc ReserveSeat (ReserveSeatRequest) returns (ReserveSeatResponse);
+  rpc ReleaseSeat (ReleaseSeatRequest) returns (ReleaseSeatResponse);
+}
+
+message Airport {
+  string code = 1;
+  string name = 2;
+  string city = 3;
+  string country = 4;
+}
+
+message Flight {
+  int64 id = 1;
+  string flight_number = 2;
+  string departure_airport = 3;
+  string arrival_airport = 4;
+  google.protobuf.Timestamp departure_time = 5;
+  google.protobuf.Timestamp arrival_time = 6;
+  double price = 7;
+  string status = 8;
+  int32 total_seats = 9;
+  int32 available_seats = 10;
+}
+
+message Seat {
+  int64 id = 1;
+  string seat_number = 2;
+  bool is_booked = 3;
+  double price_multiplier = 4;
+}
+
+message SearchFlightsRequest {
+  string from_airport = 1;
+  string to_airport = 2;
+  google.protobuf.Timestamp date = 3;
+  int32 passenger_count = 4;
+}
+
+message SearchFlightsResponse {
+  repeated Flight flights = 1;
+}
+
+message GetFlightDetailsRequest {
+  int64 flight_id = 1;
+}
+
+message GetFlightDetailsResponse {
+  Flight flight = 1;
+}
+
+message ListAirportsRequest {
+  string query = 1;
+}
+
+message ListAirportsResponse {
+  repeated Airport airports = 1;
+}
+
+message GetFlightSeatsRequest {
+  int64 flight_id = 1;
+}
+
+message GetFlightSeatsResponse {
+  repeated Seat seats = 1;
+}
+
+message ReserveSeatRequest {
+  int64 flight_id = 1;
+  string seat_number = 2;
+}
+
+message ReserveSeatResponse {
+  bool success = 1;
+  int64 seat_id = 2;
+}
+
+message ReleaseSeatRequest {
+  int64 flight_id = 1;
+  string seat_number = 2;
+}
+
+message ReleaseSeatResponse {
+  bool success = 1;
+}

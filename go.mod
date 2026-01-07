@@ -3,6 +3,7 @@ module github.com/squ1ky/flyte
 go 1.25.1
 
 require (
+	github.com/elastic/go-elasticsearch/v7 v7.17.10
 	github.com/gin-gonic/gin v1.11.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/golang-migrate/migrate/v4 v4.19.1

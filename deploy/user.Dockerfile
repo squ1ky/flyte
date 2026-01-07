@@ -14,7 +14,7 @@ FROM alpine:3.19
 WORKDIR /root
 
 COPY --from=builder /app/user-service .
-COPY --from=builder /app/migrations ./migrations
+COPY --from=builder /app/migrations/user ./migrations/user
 
 EXPOSE 50051
 

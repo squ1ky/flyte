@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	flightv1 "github.com/squ1ky/flyte/gen/go/flight"
 	userv1 "github.com/squ1ky/flyte/gen/go/user"
 	"github.com/squ1ky/flyte/internal/gateway/config"
 	"github.com/squ1ky/flyte/internal/gateway/handler"
@@ -25,19 +26,31 @@ func main() {
 	log := logger.SetupLogger(cfg.Env)
 	log.Info("starting gateway service", slog.String("env", cfg.Env))
 
-	userConn, err := grpc.NewClient(cfg.Clients.User.Addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// User Service
+	userConn, err := grpc.NewClient(cfg.Clients.UserAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Error("failed to connect to user service", slog.Any("error", err))
 		os.Exit(1)
 	}
 	defer userConn.Close()
-
 	userClient := userv1.NewUserServiceClient(userConn)
-	log.Info("connected to user service", slog.String("addr", cfg.Clients.User.Addr))
+	log.Info("connected to user service", slog.String("addr", cfg.Clients.UserAddr))
 
+	// Flight Service
+	flightConn, err := grpc.NewClient(cfg.Clients.FlightAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Error("failed to connect to flight service", slog.Any("error", err))
+		os.Exit(1)
+	}
+	defer flightConn.Close()
+	flightClient := flightv1.NewFlightServiceClient(flightConn)
+	log.Info("connected to flight service", slog.String("addr", cfg.Clients.FlightAddr))
+
+	// Handlers
 	userHandler := handler.NewUserHandler(userClient)
+	flightHandler := handler.NewFlightHandler(flightClient)
 
-	gatewayHandler := handler.NewGatewayHandler(userHandler)
+	gatewayHandler := handler.NewGatewayHandler(userHandler, flightHandler)
 
 	r := router.NewRouter(gatewayHandler, userClient)
 

@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS seats;
+DROP INDEX IF EXISTS idx_flights_route;
+DROP TABLE IF EXISTS flights;
+DROP TABLE IF EXISTS airports;

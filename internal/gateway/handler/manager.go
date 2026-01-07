@@ -8,12 +8,14 @@ import (
 )
 
 type GatewayHandler struct {
-	User *UserHandler
+	User   *UserHandler
+	Flight *FlightHandler
 }
 
-func NewGatewayHandler(userHandler *UserHandler) *GatewayHandler {
+func NewGatewayHandler(user *UserHandler, flight *FlightHandler) *GatewayHandler {
 	return &GatewayHandler{
-		User: userHandler,
+		User:   user,
+		Flight: flight,
 	}
 }
 

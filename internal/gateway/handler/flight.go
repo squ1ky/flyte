@@ -50,6 +50,56 @@ func (h *FlightHandler) SearchFlights(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+type createFlightInput struct {
+	FlightNumber     string  `json:"flight_number" binding:"required"`
+	DepartureAirport string  `json:"departure_airport" binding:"required,len=3"`
+	ArrivalAirport   string  `json:"arrival_airport" binding:"required,len=3"`
+	DepartureTime    string  `json:"departure_time" binding:"required"`
+	ArrivalTime      string  `json:"arrival_time" binding:"required"`
+	Price            float64 `json:"price" binding:"required,gt=0"`
+	TotalSeats       int32   `json:"total_seats" binding:"required,gt=0"`
+}
+
+func (h *FlightHandler) CreateFlight(c *gin.Context) {
+	var input createFlightInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	depTime, err := time.Parse(time.RFC3339, input.DepartureTime)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid departure_time format")
+		return
+	}
+
+	arrTime, err := time.Parse(time.RFC3339, input.ArrivalTime)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid arrival_time format")
+		return
+	}
+
+	req := &flightv1.CreateFlightRequest{
+		FlightNumber:     input.FlightNumber,
+		DepartureAirport: input.DepartureAirport,
+		ArrivalAirport:   input.ArrivalAirport,
+		DepartureTime:    timestamppb.New(depTime),
+		ArrivalTime:      timestamppb.New(arrTime),
+		Price:            input.Price,
+		TotalSeats:       input.TotalSeats,
+	}
+
+	resp, err := h.client.CreateFlight(c.Request.Context(), req)
+	if err != nil {
+		mapGRPCErr(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"flight_id": resp.FlightId,
+	})
+}
+
 func (h *FlightHandler) GetFlightDetails(c *gin.Context) {
 	var uri struct {
 		ID int64 `uri:"id" binding:"required"`

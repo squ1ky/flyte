@@ -55,6 +55,26 @@ func (s *Server) SearchFlights(ctx context.Context, req *flightv1.SearchFlightsR
 	return &flightv1.SearchFlightsResponse{Flights: pbFlights}, nil
 }
 
+func (s *Server) CreateFlight(ctx context.Context, req *flightv1.CreateFlightRequest) (*flightv1.CreateFlightResponse, error) {
+	flight := &domain.Flight{
+		FlightNumber:     req.FlightNumber,
+		DepartureAirport: req.DepartureAirport,
+		ArrivalAirport:   req.ArrivalAirport,
+		DepartureTime:    req.DepartureTime.AsTime(),
+		ArrivalTime:      req.ArrivalTime.AsTime(),
+		Price:            req.Price,
+		TotalSeats:       int(req.TotalSeats),
+		Status:           "scheduled",
+	}
+
+	id, err := s.flightService.CreateFlight(ctx, flight)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to create flight: %v", err)
+	}
+
+	return &flightv1.CreateFlightResponse{FlightId: id}, nil
+}
+
 func (s *Server) GetFlightDetails(ctx context.Context, req *flightv1.GetFlightDetailsRequest) (*flightv1.GetFlightDetailsResponse, error) {
 	if req.FlightId == 0 {
 		return nil, status.Error(codes.InvalidArgument, ErrFlightIDRequired)

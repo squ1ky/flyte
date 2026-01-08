@@ -42,3 +42,16 @@ func AuthMiddleware(client userv1.UserServiceClient) gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func AdminOnlyMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role, exists := c.Get("role")
+		if !exists || role != "admin" {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+				"error": "forbidden: admins only",
+			})
+			return
+		}
+		c.Next()
+	}
+}

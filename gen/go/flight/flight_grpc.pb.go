@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	FlightService_SearchFlights_FullMethodName    = "/flight.FlightService/SearchFlights"
+	FlightService_CreateFlight_FullMethodName     = "/flight.FlightService/CreateFlight"
 	FlightService_GetFlightDetails_FullMethodName = "/flight.FlightService/GetFlightDetails"
 	FlightService_GetFlightSeats_FullMethodName   = "/flight.FlightService/GetFlightSeats"
 	FlightService_ListAirports_FullMethodName     = "/flight.FlightService/ListAirports"
@@ -32,6 +33,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type FlightServiceClient interface {
 	SearchFlights(ctx context.Context, in *SearchFlightsRequest, opts ...grpc.CallOption) (*SearchFlightsResponse, error)
+	CreateFlight(ctx context.Context, in *CreateFlightRequest, opts ...grpc.CallOption) (*CreateFlightResponse, error)
 	GetFlightDetails(ctx context.Context, in *GetFlightDetailsRequest, opts ...grpc.CallOption) (*GetFlightDetailsResponse, error)
 	GetFlightSeats(ctx context.Context, in *GetFlightSeatsRequest, opts ...grpc.CallOption) (*GetFlightSeatsResponse, error)
 	ListAirports(ctx context.Context, in *ListAirportsRequest, opts ...grpc.CallOption) (*ListAirportsResponse, error)
@@ -51,6 +53,16 @@ func (c *flightServiceClient) SearchFlights(ctx context.Context, in *SearchFligh
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SearchFlightsResponse)
 	err := c.cc.Invoke(ctx, FlightService_SearchFlights_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *flightServiceClient) CreateFlight(ctx context.Context, in *CreateFlightRequest, opts ...grpc.CallOption) (*CreateFlightResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateFlightResponse)
+	err := c.cc.Invoke(ctx, FlightService_CreateFlight_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -112,6 +124,7 @@ func (c *flightServiceClient) ReleaseSeat(ctx context.Context, in *ReleaseSeatRe
 // for forward compatibility.
 type FlightServiceServer interface {
 	SearchFlights(context.Context, *SearchFlightsRequest) (*SearchFlightsResponse, error)
+	CreateFlight(context.Context, *CreateFlightRequest) (*CreateFlightResponse, error)
 	GetFlightDetails(context.Context, *GetFlightDetailsRequest) (*GetFlightDetailsResponse, error)
 	GetFlightSeats(context.Context, *GetFlightSeatsRequest) (*GetFlightSeatsResponse, error)
 	ListAirports(context.Context, *ListAirportsRequest) (*ListAirportsResponse, error)
@@ -129,6 +142,9 @@ type UnimplementedFlightServiceServer struct{}
 
 func (UnimplementedFlightServiceServer) SearchFlights(context.Context, *SearchFlightsRequest) (*SearchFlightsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SearchFlights not implemented")
+}
+func (UnimplementedFlightServiceServer) CreateFlight(context.Context, *CreateFlightRequest) (*CreateFlightResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateFlight not implemented")
 }
 func (UnimplementedFlightServiceServer) GetFlightDetails(context.Context, *GetFlightDetailsRequest) (*GetFlightDetailsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFlightDetails not implemented")
@@ -180,6 +196,24 @@ func _FlightService_SearchFlights_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(FlightServiceServer).SearchFlights(ctx, req.(*SearchFlightsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FlightService_CreateFlight_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateFlightRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FlightServiceServer).CreateFlight(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FlightService_CreateFlight_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FlightServiceServer).CreateFlight(ctx, req.(*CreateFlightRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -284,6 +318,10 @@ var FlightService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SearchFlights",
 			Handler:    _FlightService_SearchFlights_Handler,
+		},
+		{
+			MethodName: "CreateFlight",
+			Handler:    _FlightService_CreateFlight_Handler,
 		},
 		{
 			MethodName: "GetFlightDetails",

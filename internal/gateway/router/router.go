@@ -30,7 +30,7 @@ func (r *Router) InitRoutes() *gin.Engine {
 	api := router.Group("/api/v1")
 	{
 		RegisterUserRoutes(api, r.handler, r.userClient)
-		RegisterFlightRoutes(api, r.handler)
+		RegisterFlightRoutes(api, r.handler, r.userClient)
 	}
 
 	return router

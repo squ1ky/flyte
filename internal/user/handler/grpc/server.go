@@ -6,15 +6,14 @@ import (
 	userv1 "github.com/squ1ky/flyte/gen/go/user"
 	"github.com/squ1ky/flyte/internal/user/domain"
 	"github.com/squ1ky/flyte/internal/user/service"
+	"github.com/squ1ky/flyte/internal/user/validator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"time"
 )
 
 const (
-	ErrEmailPasswordRequired = "email and password are required"
-	ErrTokenRequired         = "token is required"
-	ErrPassengerInfoRequired = "passenger info is required"
+	ErrTokenRequired = "token is required"
 
 	ErrInvalidCredentials = "invalid email or password"
 	ErrUserAlreadyExists  = "user with this email already exists"
@@ -35,8 +34,8 @@ func NewServer(auth service.Auth, passenger service.Passenger) *Server {
 }
 
 func (s *Server) Register(ctx context.Context, req *userv1.RegisterRequest) (*userv1.RegisterResponse, error) {
-	if req.Email == "" || req.Password == "" {
-		return nil, status.Error(codes.InvalidArgument, ErrEmailPasswordRequired)
+	if err := validator.ValidateRegister(req); err != nil {
+		return nil, err
 	}
 
 	userID, err := s.auth.Register(ctx, req.Email, req.Password, req.PhoneNumber)
@@ -51,8 +50,8 @@ func (s *Server) Register(ctx context.Context, req *userv1.RegisterRequest) (*us
 }
 
 func (s *Server) Login(ctx context.Context, req *userv1.LoginRequest) (*userv1.LoginResponse, error) {
-	if req.Email == "" || req.Password == "" {
-		return nil, status.Error(codes.InvalidArgument, ErrEmailPasswordRequired)
+	if err := validator.ValidateLogin(req); err != nil {
+		return nil, err
 	}
 
 	token, err := s.auth.Login(ctx, req.Email, req.Password)
@@ -99,15 +98,12 @@ func (s *Server) GetUser(ctx context.Context, req *userv1.GetUserRequest) (*user
 }
 
 func (s *Server) AddPassenger(ctx context.Context, req *userv1.AddPassengerRequest) (*userv1.AddPassengerResponse, error) {
-	info := req.Info
-	if info == nil {
-		return nil, status.Error(codes.InvalidArgument, ErrPassengerInfoRequired)
+	if err := validator.ValidatePassenger(req.Info); err != nil {
+		return nil, err
 	}
 
-	birthDate, err := time.Parse("2006-01-02", info.BirthDate)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid birth date format: %v", err)
-	}
+	info := req.Info
+	birthDate, _ := time.Parse("2006-01-02", info.BirthDate)
 
 	passenger := &domain.Passenger{
 		UserID:         req.UserId,

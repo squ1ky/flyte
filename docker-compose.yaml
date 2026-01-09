@@ -20,6 +20,8 @@ services:
       POSTGRES_USER: ${USER_DB_USER}
       POSTGRES_PASSWORD: ${USER_DB_PASSWORD}
       POSTGRES_DB: ${USER_DB_NAME}
+    networks:
+      - flyte-network
     ports:
       - "${USER_DB_PORT_EXTERNAL}:5432"
     volumes:
@@ -37,6 +39,8 @@ services:
     container_name: user-service
     env_file:
       - .env
+    networks:
+      - flyte-network
     depends_on:
       user-db:
         condition: service_healthy
@@ -52,6 +56,8 @@ services:
       POSTGRES_USER: ${FLIGHT_DB_USER}
       POSTGRES_PASSWORD: ${FLIGHT_DB_PASSWORD}
       POSTGRES_DB: ${FLIGHT_DB_NAME}
+    networks:
+      - flyte-network
     ports:
       - "${FLIGHT_DB_PORT_EXTERNAL}:5432"
     volumes:
@@ -70,6 +76,8 @@ services:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - xpack.security.enabled=false
+    networks:
+      - flyte-network
     ports:
       - "${ELASTIC_PORT}:9200"
     volumes:
@@ -87,6 +95,8 @@ services:
     container_name: flight-service
     env_file:
       - .env
+    networks:
+      - flyte-network
     depends_on:
       flight-db:
         condition: service_healthy
@@ -94,6 +104,21 @@ services:
         condition: service_healthy
     ports:
       - "${FLIGHT_GRPC_PORT}:${FLIGHT_GRPC_PORT}"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: deploy/frontend.Dockerfile
+    container_name: frontend
+    env_file:
+      - .env
+    networks:
+      - flyte-network
+    ports:
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
 
 volumes:
   user_pg_data:

@@ -95,22 +95,19 @@ func (h *FlightHandler) CreateFlight(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, map[string]interface{}{
+	c.JSON(http.StatusOK, gin.H{
 		"flight_id": resp.FlightId,
 	})
 }
 
 func (h *FlightHandler) GetFlightDetails(c *gin.Context) {
-	var uri struct {
-		ID int64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&uri); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "invalid flight id")
+	flightID, err := parseIDParam(c, "id")
+	if err != nil {
 		return
 	}
 
 	resp, err := h.client.GetFlightDetails(c.Request.Context(), &flightv1.GetFlightDetailsRequest{
-		FlightId: uri.ID,
+		FlightId: flightID,
 	})
 	if err != nil {
 		mapGRPCErr(c, err)
@@ -121,16 +118,13 @@ func (h *FlightHandler) GetFlightDetails(c *gin.Context) {
 }
 
 func (h *FlightHandler) GetFlightSeats(c *gin.Context) {
-	var uri struct {
-		ID int64 `uri:"id" binding:"required"`
-	}
-	if err := c.ShouldBindUri(&uri); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "invalid flight id")
+	flightID, err := parseIDParam(c, "id")
+	if err != nil {
 		return
 	}
 
 	resp, err := h.client.GetFlightSeats(c.Request.Context(), &flightv1.GetFlightSeatsRequest{
-		FlightId: uri.ID,
+		FlightId: flightID,
 	})
 	if err != nil {
 		mapGRPCErr(c, err)

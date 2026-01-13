@@ -24,7 +24,7 @@ type KafkaConfig struct {
 	Brokers       []string `env:"KAFKA_BROKERS" env-required:"true"`
 	TopicRequests string   `env:"KAFKA_TOPIC_PAYMENT_REQUESTS" env-required:"true"`
 	TopicResults  string   `env:"KAFKA_TOPIC_PAYMENT_RESULTS" env-required:"true"`
-	GroupID       string   `env:"KAFKA_CONSUMER_GROUP_ID" env-required:"true"`
+	GroupID       string   `env:"PAYMENT_KAFKA_GROUP_ID" env-required:"true"`
 }
 
 func Load() (*Config, error) {

@@ -16,8 +16,9 @@ type HTTPConfig struct {
 }
 
 type ClientsConfig struct {
-	UserAddr   string `env:"USER_SERVICE_ADDR" env-required:"true"`
-	FlightAddr string `env:"FLIGHT_SERVICE_ADDR" env-required:"true"`
+	UserAddr    string `env:"USER_SERVICE_ADDR" env-required:"true"`
+	FlightAddr  string `env:"FLIGHT_SERVICE_ADDR" env-required:"true"`
+	BookingAddr string `env:"BOOKING_SERVICE_ADDR" env-required:"true"`
 }
 
 func Load() (*Config, error) {

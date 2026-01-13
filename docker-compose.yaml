@@ -175,6 +175,46 @@ services:
       kafka:
         condition: service_healthy
 
+  booking-db:
+    image: postgres:15-alpine
+    container_name: booking-db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${BOOKING_DB_USER}
+      POSTGRES_PASSWORD: ${BOOKING_DB_PASSWORD}
+      POSTGRES_DB: ${BOOKING_DB_NAME}
+    networks:
+      - flyte-network
+    ports:
+      - "${BOOKING_DB_PORT_EXTERNAL}:5432"
+    volumes:
+      - booking_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${BOOKING_DB_USER} -d ${BOOKING_DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  booking-service:
+    build:
+      context: .
+      dockerfile: deploy/booking.Dockerfile
+    container_name: booking-service
+    env_file:
+      - .env
+    networks:
+      - flyte-network
+    depends_on:
+      booking-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      flight-service:
+        condition: service_started
+    ports:
+      - "${BOOKING_GRPC_PORT}:${BOOKING_GRPC_PORT}"
+
   frontend:
     build:
       context: .
@@ -194,6 +234,7 @@ volumes:
   user_pg_data:
   flight_pg_data:
   payment_pg_data:
+  booking_pg_data:
   es_data:
 
 networks:

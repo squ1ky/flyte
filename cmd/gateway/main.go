@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	bookingv1 "github.com/squ1ky/flyte/gen/go/booking"
 	flightv1 "github.com/squ1ky/flyte/gen/go/flight"
 	userv1 "github.com/squ1ky/flyte/gen/go/user"
 	"github.com/squ1ky/flyte/internal/gateway/config"
@@ -46,11 +47,22 @@ func main() {
 	flightClient := flightv1.NewFlightServiceClient(flightConn)
 	log.Info("connected to flight service", slog.String("addr", cfg.Clients.FlightAddr))
 
+	// Booking Service
+	bookingConn, err := grpc.NewClient(cfg.Clients.BookingAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Error("failed to connect to booking service", slog.Any("error", err))
+		os.Exit(1)
+	}
+	defer bookingConn.Close()
+	bookingClient := bookingv1.NewBookingServiceClient(bookingConn)
+	log.Info("connected to booking service", slog.String("addr", cfg.Clients.BookingAddr))
+
 	// Handlers
 	userHandler := handler.NewUserHandler(userClient)
 	flightHandler := handler.NewFlightHandler(flightClient)
+	bookingHandler := handler.NewBookingHandler(bookingClient)
 
-	gatewayHandler := handler.NewGatewayHandler(userHandler, flightHandler)
+	gatewayHandler := handler.NewGatewayHandler(userHandler, flightHandler, bookingHandler)
 
 	r := router.NewRouter(gatewayHandler, userClient)
 

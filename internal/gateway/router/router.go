@@ -2,15 +2,17 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	bookingv1 "github.com/squ1ky/flyte/gen/go/booking"
 	flightv1 "github.com/squ1ky/flyte/gen/go/flight"
 	userv1 "github.com/squ1ky/flyte/gen/go/user"
 	"github.com/squ1ky/flyte/internal/gateway/handler"
 )
 
 type Router struct {
-	handler      *handler.GatewayHandler
-	userClient   userv1.UserServiceClient
-	flightClient flightv1.FlightServiceClient
+	handler       *handler.GatewayHandler
+	userClient    userv1.UserServiceClient
+	flightClient  flightv1.FlightServiceClient
+	bookingClient bookingv1.BookingServiceClient
 }
 
 func NewRouter(h *handler.GatewayHandler, userClient userv1.UserServiceClient) *Router {
@@ -31,6 +33,7 @@ func (r *Router) InitRoutes() *gin.Engine {
 	{
 		RegisterUserRoutes(api, r.handler, r.userClient)
 		RegisterFlightRoutes(api, r.handler, r.userClient)
+		RegisterBookingRoutes(api, r.handler, r.userClient)
 	}
 
 	return router

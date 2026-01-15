@@ -38,7 +38,7 @@ type document struct {
 	DepartureAirport string    `json:"departure_airport"`
 	ArrivalAirport   string    `json:"arrival_airport"`
 	DepartureTime    time.Time `json:"departure_time"`
-	Price            float64   `json:"price"`
+	PriceCents       int64     `json:"price_cents"`
 	AvailableSeats   int       `json:"available_seats"`
 }
 
@@ -48,7 +48,7 @@ func (r *FlightSearchRepo) IndexFlight(ctx context.Context, f *domain.Flight) er
 		DepartureAirport: f.DepartureAirport,
 		ArrivalAirport:   f.ArrivalAirport,
 		DepartureTime:    f.DepartureTime,
-		Price:            f.Price,
+		PriceCents:       f.PriceCents,
 		AvailableSeats:   f.AvailableSeats,
 	}
 
@@ -119,7 +119,7 @@ func (r *FlightSearchRepo) Search(ctx context.Context, from, to string, date tim
 			},
 		},
 		"sort": []map[string]interface{}{
-			{"price": "asc"},
+			{"price_cents": "asc"},
 		},
 	}
 
@@ -165,7 +165,7 @@ func (r *FlightSearchRepo) parseSearchResponse(body io.ReadCloser) ([]domain.Fli
 			DepartureAirport: hit.Source.DepartureAirport,
 			ArrivalAirport:   hit.Source.ArrivalAirport,
 			DepartureTime:    hit.Source.DepartureTime,
-			Price:            hit.Source.Price,
+			PriceCents:       hit.Source.PriceCents,
 			AvailableSeats:   hit.Source.AvailableSeats,
 		})
 	}

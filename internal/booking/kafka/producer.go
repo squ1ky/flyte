@@ -12,10 +12,10 @@ import (
 )
 
 type PaymentRequestDTO struct {
-	BookingID string  `json:"booking_id"`
-	UserID    int64   `json:"user_id"`
-	Amount    float64 `json:"amount"`
-	Currency  string  `json:"currency"`
+	BookingID   string `json:"booking_id"`
+	UserID      int64  `json:"user_id"`
+	AmountCents int64  `json:"amount_cents"`
+	Currency    string `json:"currency"`
 }
 
 type BookingProducer struct {
@@ -38,10 +38,10 @@ func NewProducer(cfg config.KafkaConfig, log *slog.Logger) *BookingProducer {
 
 func (p *BookingProducer) SendPaymentRequest(ctx context.Context, booking *domain.Booking) error {
 	req := PaymentRequestDTO{
-		BookingID: booking.ID,
-		UserID:    booking.UserID,
-		Amount:    booking.Price,
-		Currency:  booking.Currency,
+		BookingID:   booking.ID,
+		UserID:      booking.UserID,
+		AmountCents: booking.PriceCents,
+		Currency:    booking.Currency,
 	}
 
 	reqBytes, err := json.Marshal(req)
@@ -61,7 +61,7 @@ func (p *BookingProducer) SendPaymentRequest(ctx context.Context, booking *domai
 
 	p.log.Info("payment request sent",
 		"booking_id", booking.ID,
-		"amount", booking.Price)
+		"amount", booking.PriceCents)
 
 	return nil
 }

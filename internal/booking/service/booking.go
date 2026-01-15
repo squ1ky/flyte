@@ -35,7 +35,7 @@ type CreateBookingDTO struct {
 	UserID            int64
 	FlightID          int64
 	SeatNumber        string
-	Price             float64
+	PriceCents        int64
 	Currency          string
 	PassengerName     string
 	PassengerPassport string
@@ -48,7 +48,7 @@ func (s *BookingService) CreateBooking(ctx context.Context, dto CreateBookingDTO
 		UserID:            dto.UserID,
 		FlightID:          dto.FlightID,
 		SeatNumber:        dto.SeatNumber,
-		Price:             dto.Price,
+		PriceCents:        dto.PriceCents,
 		Currency:          dto.Currency,
 		PassengerName:     dto.PassengerName,
 		PassengerPassport: dto.PassengerPassport,

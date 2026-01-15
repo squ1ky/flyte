@@ -17,7 +17,7 @@ type Flight struct {
 	ArrivalAirport   string    `db:"arrival_airport"`
 	DepartureTime    time.Time `db:"departure_time"`
 	ArrivalTime      time.Time `db:"arrival_time"`
-	Price            float64   `db:"price"`
+	PriceCents       int64     `db:"price_cents"`
 	TotalSeats       int       `db:"total_seats"`
 	Status           string    `db:"status"`
 	CreatedAt        time.Time `db:"created_at"`

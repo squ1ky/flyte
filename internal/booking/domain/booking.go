@@ -9,7 +9,7 @@ type Booking struct {
 	SeatNumber        string        `db:"seat_number"`
 	PassengerName     string        `db:"passenger_name"`
 	PassengerPassport string        `db:"passenger_passport"`
-	Price             float64       `db:"price"`
+	PriceCents        int64         `db:"price_cents"`
 	Currency          string        `db:"currency"`
 	Status            BookingStatus `db:"status"`
 	CreatedAt         time.Time     `db:"created_at"`

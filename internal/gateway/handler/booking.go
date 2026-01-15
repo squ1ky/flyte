@@ -44,7 +44,7 @@ func (h *BookingHandler) CreateBooking(c *gin.Context) {
 		SeatNumber:        inp.SeatNumber,
 		PassengerName:     inp.PassengerName,
 		PassengerPassport: inp.PassengerPassport,
-		Price:             inp.Price,
+		PriceCents:        int64(inp.Price * 100),
 		Currency:          inp.Currency,
 	})
 	if err != nil {

@@ -19,14 +19,14 @@ func NewFlightRepo(db *sqlx.DB) *FlightRepo {
 func (r *FlightRepo) CreateFlight(ctx context.Context, f *domain.Flight) (int64, error) {
 	query := `
 		INSERT INTO flights (flight_number, departure_airport, arrival_airport,
-		                     departure_time, arrival_time, price, total_seats, status)
+		                     departure_time, arrival_time, price_cents, total_seats, status)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id
 	`
 
 	var id int64
 	err := r.db.QueryRowContext(ctx, query, f.FlightNumber, f.DepartureAirport, f.ArrivalAirport,
-		f.DepartureTime, f.ArrivalTime, f.Price, f.TotalSeats, f.Status).Scan(&id)
+		f.DepartureTime, f.ArrivalTime, f.PriceCents, f.TotalSeats, f.Status).Scan(&id)
 	if err != nil {
 		return 0, err
 	}

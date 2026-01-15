@@ -25,7 +25,7 @@ func (r *PaymentRepo) CreateOrGet(ctx context.Context, p *domain.Payment) (*doma
 	now := time.Now()
 
 	insertQuery := `
-		INSERT INTO payments (booking_id, user_id, amount, currency, status, created_at)
+		INSERT INTO payments (booking_id, user_id, amount_cents, currency, status, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
 		ON CONFLICT (booking_id) DO NOTHING
 		RETURNING id, created_at
@@ -37,7 +37,7 @@ func (r *PaymentRepo) CreateOrGet(ctx context.Context, p *domain.Payment) (*doma
 	err := r.db.QueryRowContext(ctx, insertQuery,
 		p.BookingID,
 		p.UserID,
-		p.Amount,
+		p.AmountCents,
 		p.Currency,
 		p.Status,
 		now,
@@ -94,7 +94,7 @@ func (r *PaymentRepo) UpdateStatus(ctx context.Context, paymentID string, status
 
 func (r *PaymentRepo) GetByBookingID(ctx context.Context, bookingID string) (*domain.Payment, error) {
 	query := `
-		SELECT id, booking_id, user_id, amount, currency, status, error_message, created_at, processed_at
+		SELECT id, booking_id, user_id, amount_cents, currency, status, error_message, created_at, processed_at
 		FROM payments
 		WHERE booking_id = $1
 	`

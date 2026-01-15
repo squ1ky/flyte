@@ -62,7 +62,7 @@ func (s *Server) CreateFlight(ctx context.Context, req *flightv1.CreateFlightReq
 		ArrivalAirport:   req.ArrivalAirport,
 		DepartureTime:    req.DepartureTime.AsTime(),
 		ArrivalTime:      req.ArrivalTime.AsTime(),
-		Price:            req.Price,
+		PriceCents:       req.PriceCents,
 		TotalSeats:       int(req.TotalSeats),
 		Status:           "scheduled",
 	}
@@ -170,7 +170,7 @@ func mapFlightToProto(f *domain.Flight) *flightv1.Flight {
 		ArrivalAirport:   f.ArrivalAirport,
 		DepartureTime:    timestamppb.New(f.DepartureTime),
 		ArrivalTime:      timestamppb.New(f.ArrivalTime),
-		Price:            f.Price,
+		PriceCents:       f.PriceCents,
 		Status:           f.Status,
 		TotalSeats:       int32(f.TotalSeats),
 		AvailableSeats:   int32(f.AvailableSeats),

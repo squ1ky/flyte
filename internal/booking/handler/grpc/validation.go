@@ -26,7 +26,7 @@ func validateCreateBookingRequest(req *bookingv1.CreateBookingRequest) error {
 	if strings.TrimSpace(req.PassengerPassport) == "" {
 		return status.Error(codes.InvalidArgument, "passenger_passport is required")
 	}
-	if req.Price <= 0 {
+	if req.PriceCents <= 0 {
 		return status.Error(codes.InvalidArgument, "price must be > 0")
 	}
 	return nil

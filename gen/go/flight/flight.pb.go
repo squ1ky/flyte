@@ -98,7 +98,7 @@ type Flight struct {
 	ArrivalAirport   string                 `protobuf:"bytes,4,opt,name=arrival_airport,json=arrivalAirport,proto3" json:"arrival_airport,omitempty"`
 	DepartureTime    *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=departure_time,json=departureTime,proto3" json:"departure_time,omitempty"`
 	ArrivalTime      *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=arrival_time,json=arrivalTime,proto3" json:"arrival_time,omitempty"`
-	Price            float64                `protobuf:"fixed64,7,opt,name=price,proto3" json:"price,omitempty"`
+	PriceCents       int64                  `protobuf:"varint,7,opt,name=price_cents,json=priceCents,proto3" json:"price_cents,omitempty"`
 	Status           string                 `protobuf:"bytes,8,opt,name=status,proto3" json:"status,omitempty"`
 	TotalSeats       int32                  `protobuf:"varint,9,opt,name=total_seats,json=totalSeats,proto3" json:"total_seats,omitempty"`
 	AvailableSeats   int32                  `protobuf:"varint,10,opt,name=available_seats,json=availableSeats,proto3" json:"available_seats,omitempty"`
@@ -178,9 +178,9 @@ func (x *Flight) GetArrivalTime() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *Flight) GetPrice() float64 {
+func (x *Flight) GetPriceCents() int64 {
 	if x != nil {
-		return x.Price
+		return x.PriceCents
 	}
 	return 0
 }
@@ -857,7 +857,7 @@ type CreateFlightRequest struct {
 	ArrivalAirport   string                 `protobuf:"bytes,3,opt,name=arrival_airport,json=arrivalAirport,proto3" json:"arrival_airport,omitempty"`
 	DepartureTime    *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=departure_time,json=departureTime,proto3" json:"departure_time,omitempty"`
 	ArrivalTime      *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=arrival_time,json=arrivalTime,proto3" json:"arrival_time,omitempty"`
-	Price            float64                `protobuf:"fixed64,6,opt,name=price,proto3" json:"price,omitempty"`
+	PriceCents       int64                  `protobuf:"varint,6,opt,name=price_cents,json=priceCents,proto3" json:"price_cents,omitempty"`
 	TotalSeats       int32                  `protobuf:"varint,7,opt,name=total_seats,json=totalSeats,proto3" json:"total_seats,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
@@ -928,9 +928,9 @@ func (x *CreateFlightRequest) GetArrivalTime() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *CreateFlightRequest) GetPrice() float64 {
+func (x *CreateFlightRequest) GetPriceCents() int64 {
 	if x != nil {
-		return x.Price
+		return x.PriceCents
 	}
 	return 0
 }
@@ -995,15 +995,16 @@ const file_flight_proto_rawDesc = "" +
 	"\x04code\x18\x01 \x01(\tR\x04code\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
 	"\x04city\x18\x03 \x01(\tR\x04city\x12\x18\n" +
-	"\acountry\x18\x04 \x01(\tR\acountry\"\x8d\x03\n" +
+	"\acountry\x18\x04 \x01(\tR\acountry\"\x98\x03\n" +
 	"\x06Flight\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12#\n" +
 	"\rflight_number\x18\x02 \x01(\tR\fflightNumber\x12+\n" +
 	"\x11departure_airport\x18\x03 \x01(\tR\x10departureAirport\x12'\n" +
 	"\x0farrival_airport\x18\x04 \x01(\tR\x0earrivalAirport\x12A\n" +
 	"\x0edeparture_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\rdepartureTime\x12=\n" +
-	"\farrival_time\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\varrivalTime\x12\x14\n" +
-	"\x05price\x18\a \x01(\x01R\x05price\x12\x16\n" +
+	"\farrival_time\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\varrivalTime\x12\x1f\n" +
+	"\vprice_cents\x18\a \x01(\x03R\n" +
+	"priceCents\x12\x16\n" +
 	"\x06status\x18\b \x01(\tR\x06status\x12\x1f\n" +
 	"\vtotal_seats\x18\t \x01(\x05R\n" +
 	"totalSeats\x12'\n" +
@@ -1047,14 +1048,15 @@ const file_flight_proto_rawDesc = "" +
 	"\vseat_number\x18\x02 \x01(\tR\n" +
 	"seatNumber\"/\n" +
 	"\x13ReleaseSeatResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xc9\x02\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\xd4\x02\n" +
 	"\x13CreateFlightRequest\x12#\n" +
 	"\rflight_number\x18\x01 \x01(\tR\fflightNumber\x12+\n" +
 	"\x11departure_airport\x18\x02 \x01(\tR\x10departureAirport\x12'\n" +
 	"\x0farrival_airport\x18\x03 \x01(\tR\x0earrivalAirport\x12A\n" +
 	"\x0edeparture_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\rdepartureTime\x12=\n" +
-	"\farrival_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\varrivalTime\x12\x14\n" +
-	"\x05price\x18\x06 \x01(\x01R\x05price\x12\x1f\n" +
+	"\farrival_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\varrivalTime\x12\x1f\n" +
+	"\vprice_cents\x18\x06 \x01(\x03R\n" +
+	"priceCents\x12\x1f\n" +
 	"\vtotal_seats\x18\a \x01(\x05R\n" +
 	"totalSeats\"3\n" +
 	"\x14CreateFlightResponse\x12\x1b\n" +

@@ -22,7 +22,7 @@ func (r *BookingRepo) Create(ctx context.Context, b *domain.Booking) (string, er
 		INSERT INTO bookings (
 			user_id, flight_id, seat_number,
 		    passenger_name, passenger_passport,
-		    price, currency, status, created_at, updated_at
+		    price_cents, currency, status, created_at, updated_at
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
 		RETURNING id
 	`
@@ -31,7 +31,7 @@ func (r *BookingRepo) Create(ctx context.Context, b *domain.Booking) (string, er
 	err := r.db.QueryRowContext(ctx, query,
 		b.UserID, b.FlightID, b.SeatNumber,
 		b.PassengerName, b.PassengerPassport,
-		b.Price, b.Currency, b.Status,
+		b.PriceCents, b.Currency, b.Status,
 	).Scan(&id)
 	if err != nil {
 		return "", fmt.Errorf("failed to create booking: %w", err)

@@ -29,13 +29,13 @@ func NewPaymentService(repo repository.PaymentRepository, log *slog.Logger) *Pay
 	}
 }
 
-func (s *PaymentService) ProcessPayment(ctx context.Context, bookingID, userID string, amount float64, currency string) (*domain.Payment, error) {
+func (s *PaymentService) ProcessPayment(ctx context.Context, bookingID string, userID, amountCents int64, currency string) (*domain.Payment, error) {
 	payment := &domain.Payment{
-		BookingID: bookingID,
-		UserID:    userID,
-		Amount:    amount,
-		Currency:  currency,
-		Status:    domain.PaymentStatusPending,
+		BookingID:   bookingID,
+		UserID:      userID,
+		AmountCents: amountCents,
+		Currency:    currency,
+		Status:      domain.PaymentStatusPending,
 	}
 
 	result, err := s.repo.CreateOrGet(ctx, payment)

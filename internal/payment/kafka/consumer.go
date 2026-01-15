@@ -11,10 +11,10 @@ import (
 )
 
 type PaymentRequestDTO struct {
-	BookingID string  `json:"booking_id"`
-	UserID    string  `json:"user_id"`
-	Amount    float64 `json:"amount"`
-	Currency  string  `json:"currency"`
+	BookingID   string `json:"booking_id"`
+	UserID      int64  `json:"user_id"`
+	AmountCents int64  `json:"amount_cents"`
+	Currency    string `json:"currency"`
 }
 
 type PaymentConsumer struct {
@@ -80,7 +80,7 @@ func (c *PaymentConsumer) processMessage(ctx context.Context, m kafka.Message) e
 
 	c.log.Info("received payment request",
 		"booking_id", req.BookingID,
-		"amount", req.Amount,
+		"amount", req.AmountCents,
 		"offset", m.Offset)
 
 	return c.handler.HandlePaymentRequest(ctx, req)

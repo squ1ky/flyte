@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS bookings
     passenger_name     VARCHAR(255)   NOT NULL,
     passenger_passport VARCHAR(50)    NOT NULL,
 
-    price              DECIMAL(10, 2) NOT NULL,
+    price_cents        BIGINT         NOT NULL,
     currency           VARCHAR(3)     NOT NULL  DEFAULT 'RUB',
 
     status             VARCHAR(20)    NOT NULL  DEFAULT 'PENDING',

@@ -31,7 +31,7 @@ message Flight {
   string arrival_airport = 4;
   google.protobuf.Timestamp departure_time = 5;
   google.protobuf.Timestamp arrival_time = 6;
-  double price = 7;
+  int64 price_cents = 7;
   string status = 8;
   int32 total_seats = 9;
   int32 available_seats = 10;
@@ -104,7 +104,7 @@ message CreateFlightRequest {
   string arrival_airport = 3;
   google.protobuf.Timestamp departure_time = 4;
   google.protobuf.Timestamp arrival_time = 5;
-  double price = 6;
+  int64 price_cents = 6;
   int32 total_seats = 7;
 }
 

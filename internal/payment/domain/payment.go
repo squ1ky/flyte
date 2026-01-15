@@ -20,8 +20,8 @@ const (
 type Payment struct {
 	ID           string        `db:"id"`
 	BookingID    string        `db:"booking_id"`
-	UserID       string        `db:"user_id"`
-	Amount       float64       `db:"amount"`
+	UserID       int64         `db:"user_id"`
+	AmountCents  int64         `db:"amount_cents"`
 	Currency     string        `db:"currency"`
 	Status       PaymentStatus `db:"status"`
 	ErrorMessage *string       `db:"error_message"`

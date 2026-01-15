@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS flights
     arrival_airport   CHAR(3)        NOT NULL REFERENCES airports (code),
     departure_time    TIMESTAMP      NOT NULL,
     arrival_time      TIMESTAMP      NOT NULL,
-    price             DECIMAL(10, 2) NOT NULL,
+    price_cents       BIGINT         NOT NULL,
     total_seats       INT            NOT NULL,
     status            VARCHAR(20) DEFAULT 'scheduled',
     created_at        TIMESTAMP   DEFAULT NOW()

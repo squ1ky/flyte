@@ -30,7 +30,7 @@ func NewPaymentMessageHandler(
 }
 
 func (h *PaymentMessageHandler) HandlePaymentRequest(ctx context.Context, req PaymentRequestDTO) error {
-	payment, err := h.service.ProcessPayment(ctx, req.BookingID, req.UserID, req.Amount, req.Currency)
+	payment, err := h.service.ProcessPayment(ctx, req.BookingID, req.UserID, req.AmountCents, req.Currency)
 	if err != nil {
 		return fmt.Errorf("server processing error: %w", err)
 	}

@@ -31,7 +31,7 @@ type Booking struct {
 	PassengerName     string                 `protobuf:"bytes,5,opt,name=passenger_name,json=passengerName,proto3" json:"passenger_name,omitempty"`
 	PassengerPassport string                 `protobuf:"bytes,6,opt,name=passenger_passport,json=passengerPassport,proto3" json:"passenger_passport,omitempty"`
 	Status            string                 `protobuf:"bytes,7,opt,name=status,proto3" json:"status,omitempty"`
-	Price             float64                `protobuf:"fixed64,8,opt,name=price,proto3" json:"price,omitempty"`
+	PriceCents        int64                  `protobuf:"varint,8,opt,name=price_cents,json=priceCents,proto3" json:"price_cents,omitempty"`
 	Currency          string                 `protobuf:"bytes,9,opt,name=currency,proto3" json:"currency,omitempty"`
 	CreatedAt         *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt         *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
@@ -118,9 +118,9 @@ func (x *Booking) GetStatus() string {
 	return ""
 }
 
-func (x *Booking) GetPrice() float64 {
+func (x *Booking) GetPriceCents() int64 {
 	if x != nil {
-		return x.Price
+		return x.PriceCents
 	}
 	return 0
 }
@@ -153,7 +153,7 @@ type CreateBookingRequest struct {
 	SeatNumber        string                 `protobuf:"bytes,3,opt,name=seat_number,json=seatNumber,proto3" json:"seat_number,omitempty"`
 	PassengerName     string                 `protobuf:"bytes,4,opt,name=passenger_name,json=passengerName,proto3" json:"passenger_name,omitempty"`
 	PassengerPassport string                 `protobuf:"bytes,5,opt,name=passenger_passport,json=passengerPassport,proto3" json:"passenger_passport,omitempty"`
-	Price             float64                `protobuf:"fixed64,6,opt,name=price,proto3" json:"price,omitempty"`
+	PriceCents        int64                  `protobuf:"varint,6,opt,name=price_cents,json=priceCents,proto3" json:"price_cents,omitempty"`
 	Currency          string                 `protobuf:"bytes,7,opt,name=currency,proto3" json:"currency,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
@@ -224,9 +224,9 @@ func (x *CreateBookingRequest) GetPassengerPassport() string {
 	return ""
 }
 
-func (x *CreateBookingRequest) GetPrice() float64 {
+func (x *CreateBookingRequest) GetPriceCents() int64 {
 	if x != nil {
-		return x.Price
+		return x.PriceCents
 	}
 	return 0
 }
@@ -542,7 +542,7 @@ var File_booking_proto protoreflect.FileDescriptor
 
 const file_booking_proto_rawDesc = "" +
 	"\n" +
-	"\rbooking.proto\x12\abooking\x1a\x1fgoogle/protobuf/timestamp.proto\"\x86\x03\n" +
+	"\rbooking.proto\x12\abooking\x1a\x1fgoogle/protobuf/timestamp.proto\"\x91\x03\n" +
 	"\aBooking\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x1b\n" +
@@ -551,22 +551,24 @@ const file_booking_proto_rawDesc = "" +
 	"seatNumber\x12%\n" +
 	"\x0epassenger_name\x18\x05 \x01(\tR\rpassengerName\x12-\n" +
 	"\x12passenger_passport\x18\x06 \x01(\tR\x11passengerPassport\x12\x16\n" +
-	"\x06status\x18\a \x01(\tR\x06status\x12\x14\n" +
-	"\x05price\x18\b \x01(\x01R\x05price\x12\x1a\n" +
+	"\x06status\x18\a \x01(\tR\x06status\x12\x1f\n" +
+	"\vprice_cents\x18\b \x01(\x03R\n" +
+	"priceCents\x12\x1a\n" +
 	"\bcurrency\x18\t \x01(\tR\bcurrency\x129\n" +
 	"\n" +
 	"created_at\x18\n" +
 	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xf5\x01\n" +
+	"updated_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x80\x02\n" +
 	"\x14CreateBookingRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x1b\n" +
 	"\tflight_id\x18\x02 \x01(\x03R\bflightId\x12\x1f\n" +
 	"\vseat_number\x18\x03 \x01(\tR\n" +
 	"seatNumber\x12%\n" +
 	"\x0epassenger_name\x18\x04 \x01(\tR\rpassengerName\x12-\n" +
-	"\x12passenger_passport\x18\x05 \x01(\tR\x11passengerPassport\x12\x14\n" +
-	"\x05price\x18\x06 \x01(\x01R\x05price\x12\x1a\n" +
+	"\x12passenger_passport\x18\x05 \x01(\tR\x11passengerPassport\x12\x1f\n" +
+	"\vprice_cents\x18\x06 \x01(\x03R\n" +
+	"priceCents\x12\x1a\n" +
 	"\bcurrency\x18\a \x01(\tR\bcurrency\"6\n" +
 	"\x15CreateBookingResponse\x12\x1d\n" +
 	"\n" +

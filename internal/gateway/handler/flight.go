@@ -85,7 +85,7 @@ func (h *FlightHandler) CreateFlight(c *gin.Context) {
 		ArrivalAirport:   input.ArrivalAirport,
 		DepartureTime:    timestamppb.New(depTime),
 		ArrivalTime:      timestamppb.New(arrTime),
-		Price:            input.Price,
+		PriceCents:       int64(input.Price * 100),
 		TotalSeats:       input.TotalSeats,
 	}
 

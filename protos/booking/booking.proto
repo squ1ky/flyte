@@ -23,7 +23,7 @@ message Booking {
   string passenger_passport = 6;
 
   string status = 7;
-  double price = 8;
+  int64 price_cents = 8;
   string currency = 9;
 
   google.protobuf.Timestamp created_at = 10;
@@ -38,7 +38,7 @@ message CreateBookingRequest {
   string passenger_name = 4;
   string passenger_passport = 5;
 
-  double price = 6;
+  int64 price_cents = 6;
   string currency = 7;
 }
 

@@ -102,8 +102,8 @@ func (r *FlightSearchRepo) Search(ctx context.Context, from, to string, date tim
 		"query": map[string]interface{}{
 			"bool": map[string]interface{}{
 				"must": []map[string]interface{}{
-					{"term": map[string]interface{}{"departure_airport": from}},
-					{"term": map[string]interface{}{"arrival_airport": to}},
+					{"match": map[string]interface{}{"departure_airport": from}},
+					{"match": map[string]interface{}{"arrival_airport": to}},
 					{"range": map[string]interface{}{
 						"departure_time": map[string]interface{}{
 							"gte": dateStart,

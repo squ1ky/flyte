@@ -33,18 +33,6 @@ func (s *FlightService) CreateFlight(ctx context.Context, f *domain.Flight) (int
 	if err != nil {
 		return 0, err
 	}
-	f.ID = id
-	f.AvailableSeats = f.TotalSeats
-
-	if err := s.flightSearcher.IndexFlight(ctx, f); err != nil {
-		s.logger.Error("failed to index new flight, rolling back db", "id", id, "error", err)
-
-		if delErr := s.flightStorage.DeleteFlight(ctx, id); delErr != nil {
-			s.logger.Error("CRITICAL: failed to rollback flight creation", "id", id, "error", delErr)
-		}
-
-		return 0, fmt.Errorf("failed to index in elastic (rolled back): %w", err)
-	}
 
 	return id, nil
 }

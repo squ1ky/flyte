@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	flightv1 "github.com/squ1ky/flyte/gen/go/flight"
 	"github.com/squ1ky/flyte/internal/flight/config"
@@ -65,6 +66,11 @@ func main() {
 
 	flightService := service.NewFlightService(flightRepo, esRepo, log)
 
+	outboxProcessor := service.NewElasticOutboxProcessor(database, esRepo, log)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go outboxProcessor.Start(ctx)
+
 	grpcServerImpl := flightgrpc.NewServer(flightService)
 
 	grpcServer := grpc.NewServer()
@@ -91,6 +97,8 @@ func main() {
 
 	sign := <-stop
 	log.Info("shutting down...", slog.String("signal", sign.String()))
+
+	cancel()
 
 	grpcServer.GracefulStop()
 	log.Info("server stopped")

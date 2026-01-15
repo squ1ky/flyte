@@ -3,6 +3,7 @@ package pgrepo
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"github.com/jmoiron/sqlx"
 	"github.com/squ1ky/flyte/internal/flight/domain"
@@ -17,7 +18,15 @@ func NewFlightRepo(db *sqlx.DB) *FlightRepo {
 }
 
 func (r *FlightRepo) CreateFlight(ctx context.Context, f *domain.Flight) (int64, error) {
-	query := `
+	f.AvailableSeats = f.TotalSeats
+
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback()
+
+	queryFlight := `
 		INSERT INTO flights (flight_number, departure_airport, arrival_airport,
 		                     departure_time, arrival_time, price_cents, total_seats, status)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -25,12 +34,32 @@ func (r *FlightRepo) CreateFlight(ctx context.Context, f *domain.Flight) (int64,
 	`
 
 	var id int64
-	err := r.db.QueryRowContext(ctx, query, f.FlightNumber, f.DepartureAirport, f.ArrivalAirport,
+	err = tx.QueryRowContext(ctx, queryFlight, f.FlightNumber, f.DepartureAirport, f.ArrivalAirport,
 		f.DepartureTime, f.ArrivalTime, f.PriceCents, f.TotalSeats, f.Status).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
-	return id, err
+	f.ID = id
+
+	payload, err := json.Marshal(f)
+	if err != nil {
+		return 0, err
+	}
+
+	queryOutbox := `
+		INSERT INTO flight_outbox (event_type, payload, status)
+		VALUES ($1, $2, 'PENDING')
+	`
+	_, err = tx.ExecContext(ctx, queryOutbox, "FLIGHT_CREATED", payload)
+	if err != nil {
+		return 0, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, err
+	}
+
+	return id, nil
 }
 
 func (r *FlightRepo) GetByID(ctx context.Context, id int64) (*domain.Flight, error) {

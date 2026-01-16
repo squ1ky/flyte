@@ -26,9 +26,10 @@ type Flight struct {
 }
 
 type Seat struct {
-	ID              int64   `db:"id"`
-	FlightID        int64   `db:"flight_id"`
-	SeatNumber      string  `db:"seat_number"`
-	IsBooked        bool    `db:"is_booked"`
-	PriceMultiplier float64 `db:"price_multiplier"`
+	ID              int64      `db:"id"`
+	FlightID        int64      `db:"flight_id"`
+	SeatNumber      string     `db:"seat_number"`
+	IsBooked        bool       `db:"is_booked"`
+	PriceMultiplier float64    `db:"price_multiplier"`
+	ReservedAt      *time.Time `db:"reserved_at"`
 }

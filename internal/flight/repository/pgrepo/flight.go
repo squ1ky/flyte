@@ -144,7 +144,13 @@ func (r *FlightRepo) BookSeat(ctx context.Context, flightID int64, seatNumber st
 		return 0, domain.ErrSeatAlreadyBooked
 	}
 
-	_, err = tx.ExecContext(ctx, "UPDATE seats SET is_booked = TRUE WHERE id = $1", seat.ID)
+	updateQuery := `
+		UPDATE seats
+		SET is_booked = TRUE, reserved_at = NOW()
+		WHERE id = $1
+	`
+
+	_, err = tx.ExecContext(ctx, updateQuery, seat.ID)
 	if err != nil {
 		return 0, err
 	}
@@ -157,13 +163,41 @@ func (r *FlightRepo) BookSeat(ctx context.Context, flightID int64, seatNumber st
 }
 
 func (r *FlightRepo) ReleaseSeat(ctx context.Context, flightID int64, seatNumber string) error {
-	query := `UPDATE seats SET is_booked = FALSE WHERE flight_id = $1 AND seat_number = $2`
+	query := `
+		UPDATE seats
+		SET is_booked = FALSE, reserved_at = NULL
+		WHERE flight_id = $1 AND seat_number = $2
+	`
+
 	res, err := r.db.ExecContext(ctx, query, flightID, seatNumber)
 	if err != nil {
 		return err
 	}
 
 	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return domain.ErrSeatNotFound
+	}
+
+	return nil
+}
+
+func (r *FlightRepo) ConfirmSeat(ctx context.Context, flightID int64, seatNumber string) error {
+	query := `
+		UPDATE seats
+		SET reserved_at = NULL
+		WHERE flight_id = $1 AND seat_number = $2 AND is_booked = TRUE
+	`
+
+	res, err := r.db.ExecContext(ctx, query, flightID, seatNumber)
+	if err != nil {
+		return err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
 	if rows == 0 {
 		return domain.ErrSeatNotFound
 	}

@@ -67,9 +67,12 @@ func main() {
 	flightService := service.NewFlightService(flightRepo, esRepo, log)
 
 	outboxProcessor := service.NewElasticOutboxProcessor(database, esRepo, log)
+	seatCleaner := service.NewSeatCleaner(database, flightRepo, esRepo, log)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	go outboxProcessor.Start(ctx)
+	go seatCleaner.Start(ctx)
 
 	grpcServerImpl := flightgrpc.NewServer(flightService)
 

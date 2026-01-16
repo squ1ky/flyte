@@ -7,11 +7,29 @@ import (
 	"fmt"
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/squ1ky/flyte/internal/flight/domain"
+	"github.com/squ1ky/flyte/internal/flight/repository"
 	"io"
 	"time"
 )
 
-const indexName = "flights"
+const (
+	indexName = "flights"
+	
+	fieldDepAirport     = "departure_airport"
+	fieldArrAirport     = "arrival_airport"
+	fieldDepTime        = "departure_time"
+	fieldPriceCents     = "price_cents"
+	fieldAvailableSeats = "available_seats"
+)
+
+type flightDocument struct {
+	ID               int64     `json:"id"`
+	DepartureAirport string    `json:"departure_airport"`
+	ArrivalAirport   string    `json:"arrival_airport"`
+	DepartureTime    time.Time `json:"departure_time"`
+	PriceCents       int64     `json:"price_cents"`
+	AvailableSeats   int       `json:"available_seats"`
+}
 
 type FlightSearchRepo struct {
 	client *elasticsearch.Client
@@ -33,17 +51,8 @@ func NewFlightSearchRepo(url string) (*FlightSearchRepo, error) {
 	return &FlightSearchRepo{client: es}, nil
 }
 
-type document struct {
-	ID               int64     `json:"id"`
-	DepartureAirport string    `json:"departure_airport"`
-	ArrivalAirport   string    `json:"arrival_airport"`
-	DepartureTime    time.Time `json:"departure_time"`
-	PriceCents       int64     `json:"price_cents"`
-	AvailableSeats   int       `json:"available_seats"`
-}
-
 func (r *FlightSearchRepo) IndexFlight(ctx context.Context, f *domain.Flight) error {
-	doc := document{
+	doc := flightDocument{
 		ID:               f.ID,
 		DepartureAirport: f.DepartureAirport,
 		ArrivalAirport:   f.ArrivalAirport,
@@ -75,7 +84,7 @@ func (r *FlightSearchRepo) IndexFlight(ctx context.Context, f *domain.Flight) er
 }
 
 func (r *FlightSearchRepo) UpdateAvailableSeats(ctx context.Context, flightID int64, newCount int) error {
-	payload := fmt.Sprintf(`{"doc": {"available_seats": %d}}`, newCount)
+	payload := fmt.Sprintf(`{"doc": {"%s": %d}}`, fieldAvailableSeats, newCount)
 
 	res, err := r.client.Update(
 		indexName,
@@ -94,34 +103,8 @@ func (r *FlightSearchRepo) UpdateAvailableSeats(ctx context.Context, flightID in
 	return nil
 }
 
-func (r *FlightSearchRepo) Search(ctx context.Context, from, to string, date time.Time, passengerCount int) ([]domain.Flight, error) {
-	dateStart := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
-	dateEnd := dateStart.Add(24 * time.Hour)
-
-	query := map[string]interface{}{
-		"query": map[string]interface{}{
-			"bool": map[string]interface{}{
-				"must": []map[string]interface{}{
-					{"match": map[string]interface{}{"departure_airport": from}},
-					{"match": map[string]interface{}{"arrival_airport": to}},
-					{"range": map[string]interface{}{
-						"departure_time": map[string]interface{}{
-							"gte": dateStart,
-							"lt":  dateEnd,
-						},
-					}},
-					{"range": map[string]interface{}{
-						"available_seats": map[string]interface{}{
-							"gte": passengerCount,
-						},
-					}},
-				},
-			},
-		},
-		"sort": []map[string]interface{}{
-			{"price_cents": "asc"},
-		},
-	}
+func (r *FlightSearchRepo) Search(ctx context.Context, filter repository.SearchFilter) ([]domain.Flight, error) {
+	query := r.buildSearchQuery(filter)
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(query); err != nil {
@@ -145,11 +128,41 @@ func (r *FlightSearchRepo) Search(ctx context.Context, from, to string, date tim
 	return r.parseSearchResponse(res.Body)
 }
 
+func (r *FlightSearchRepo) buildSearchQuery(f repository.SearchFilter) map[string]interface{} {
+	dateStart := time.Date(f.Date.Year(), f.Date.Month(), f.Date.Day(), 0, 0, 0, 0, time.UTC)
+	dateEnd := dateStart.Add(24 * time.Hour)
+
+	return map[string]interface{}{
+		"query": map[string]interface{}{
+			"bool": map[string]interface{}{
+				"must": []map[string]interface{}{
+					{"match": map[string]interface{}{fieldDepAirport: f.FromAirport}},
+					{"match": map[string]interface{}{fieldArrAirport: f.ToAirport}},
+					{"range": map[string]interface{}{
+						fieldDepTime: map[string]interface{}{
+							"gte": dateStart,
+							"lt":  dateEnd,
+						},
+					}},
+					{"range": map[string]interface{}{
+						fieldAvailableSeats: map[string]interface{}{
+							"gte": f.PassengerCount,
+						},
+					}},
+				},
+			},
+		},
+		"sort": []map[string]interface{}{
+			{fieldPriceCents: "asc"},
+		},
+	}
+}
+
 func (r *FlightSearchRepo) parseSearchResponse(body io.ReadCloser) ([]domain.Flight, error) {
 	var response struct {
 		Hits struct {
 			Hits []struct {
-				Source document `json:"_source"`
+				Source flightDocument `json:"_source"`
 			} `json:"hits"`
 		} `json:"hits"`
 	}

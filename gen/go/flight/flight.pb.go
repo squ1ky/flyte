@@ -986,6 +986,102 @@ func (x *CreateFlightResponse) GetFlightId() int64 {
 	return 0
 }
 
+type ConfirmSeatRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FlightId      int64                  `protobuf:"varint,1,opt,name=flight_id,json=flightId,proto3" json:"flight_id,omitempty"`
+	SeatNumber    string                 `protobuf:"bytes,2,opt,name=seat_number,json=seatNumber,proto3" json:"seat_number,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ConfirmSeatRequest) Reset() {
+	*x = ConfirmSeatRequest{}
+	mi := &file_flight_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConfirmSeatRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConfirmSeatRequest) ProtoMessage() {}
+
+func (x *ConfirmSeatRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_flight_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConfirmSeatRequest.ProtoReflect.Descriptor instead.
+func (*ConfirmSeatRequest) Descriptor() ([]byte, []int) {
+	return file_flight_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *ConfirmSeatRequest) GetFlightId() int64 {
+	if x != nil {
+		return x.FlightId
+	}
+	return 0
+}
+
+func (x *ConfirmSeatRequest) GetSeatNumber() string {
+	if x != nil {
+		return x.SeatNumber
+	}
+	return ""
+}
+
+type ConfirmSeatResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ConfirmSeatResponse) Reset() {
+	*x = ConfirmSeatResponse{}
+	mi := &file_flight_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConfirmSeatResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConfirmSeatResponse) ProtoMessage() {}
+
+func (x *ConfirmSeatResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_flight_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConfirmSeatResponse.ProtoReflect.Descriptor instead.
+func (*ConfirmSeatResponse) Descriptor() ([]byte, []int) {
+	return file_flight_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *ConfirmSeatResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
 var File_flight_proto protoreflect.FileDescriptor
 
 const file_flight_proto_rawDesc = "" +
@@ -1060,7 +1156,13 @@ const file_flight_proto_rawDesc = "" +
 	"\vtotal_seats\x18\a \x01(\x05R\n" +
 	"totalSeats\"3\n" +
 	"\x14CreateFlightResponse\x12\x1b\n" +
-	"\tflight_id\x18\x01 \x01(\x03R\bflightId2\xab\x04\n" +
+	"\tflight_id\x18\x01 \x01(\x03R\bflightId\"R\n" +
+	"\x12ConfirmSeatRequest\x12\x1b\n" +
+	"\tflight_id\x18\x01 \x01(\x03R\bflightId\x12\x1f\n" +
+	"\vseat_number\x18\x02 \x01(\tR\n" +
+	"seatNumber\"/\n" +
+	"\x13ConfirmSeatResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\xf3\x04\n" +
 	"\rFlightService\x12L\n" +
 	"\rSearchFlights\x12\x1c.flight.SearchFlightsRequest\x1a\x1d.flight.SearchFlightsResponse\x12I\n" +
 	"\fCreateFlight\x12\x1b.flight.CreateFlightRequest\x1a\x1c.flight.CreateFlightResponse\x12U\n" +
@@ -1068,7 +1170,8 @@ const file_flight_proto_rawDesc = "" +
 	"\x0eGetFlightSeats\x12\x1d.flight.GetFlightSeatsRequest\x1a\x1e.flight.GetFlightSeatsResponse\x12I\n" +
 	"\fListAirports\x12\x1b.flight.ListAirportsRequest\x1a\x1c.flight.ListAirportsResponse\x12F\n" +
 	"\vReserveSeat\x12\x1a.flight.ReserveSeatRequest\x1a\x1b.flight.ReserveSeatResponse\x12F\n" +
-	"\vReleaseSeat\x12\x1a.flight.ReleaseSeatRequest\x1a\x1b.flight.ReleaseSeatResponseB0Z.github.com/squ1ky/flyte/gen/go/flight;flightv1b\x06proto3"
+	"\vReleaseSeat\x12\x1a.flight.ReleaseSeatRequest\x1a\x1b.flight.ReleaseSeatResponse\x12F\n" +
+	"\vConfirmSeat\x12\x1a.flight.ConfirmSeatRequest\x1a\x1b.flight.ConfirmSeatResponseB0Z.github.com/squ1ky/flyte/gen/go/flight;flightv1b\x06proto3"
 
 var (
 	file_flight_proto_rawDescOnce sync.Once
@@ -1082,7 +1185,7 @@ func file_flight_proto_rawDescGZIP() []byte {
 	return file_flight_proto_rawDescData
 }
 
-var file_flight_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_flight_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
 var file_flight_proto_goTypes = []any{
 	(*Airport)(nil),                  // 0: flight.Airport
 	(*Flight)(nil),                   // 1: flight.Flight
@@ -1101,18 +1204,20 @@ var file_flight_proto_goTypes = []any{
 	(*ReleaseSeatResponse)(nil),      // 14: flight.ReleaseSeatResponse
 	(*CreateFlightRequest)(nil),      // 15: flight.CreateFlightRequest
 	(*CreateFlightResponse)(nil),     // 16: flight.CreateFlightResponse
-	(*timestamppb.Timestamp)(nil),    // 17: google.protobuf.Timestamp
+	(*ConfirmSeatRequest)(nil),       // 17: flight.ConfirmSeatRequest
+	(*ConfirmSeatResponse)(nil),      // 18: flight.ConfirmSeatResponse
+	(*timestamppb.Timestamp)(nil),    // 19: google.protobuf.Timestamp
 }
 var file_flight_proto_depIdxs = []int32{
-	17, // 0: flight.Flight.departure_time:type_name -> google.protobuf.Timestamp
-	17, // 1: flight.Flight.arrival_time:type_name -> google.protobuf.Timestamp
-	17, // 2: flight.SearchFlightsRequest.date:type_name -> google.protobuf.Timestamp
+	19, // 0: flight.Flight.departure_time:type_name -> google.protobuf.Timestamp
+	19, // 1: flight.Flight.arrival_time:type_name -> google.protobuf.Timestamp
+	19, // 2: flight.SearchFlightsRequest.date:type_name -> google.protobuf.Timestamp
 	1,  // 3: flight.SearchFlightsResponse.flights:type_name -> flight.Flight
 	1,  // 4: flight.GetFlightDetailsResponse.flight:type_name -> flight.Flight
 	0,  // 5: flight.ListAirportsResponse.airports:type_name -> flight.Airport
 	2,  // 6: flight.GetFlightSeatsResponse.seats:type_name -> flight.Seat
-	17, // 7: flight.CreateFlightRequest.departure_time:type_name -> google.protobuf.Timestamp
-	17, // 8: flight.CreateFlightRequest.arrival_time:type_name -> google.protobuf.Timestamp
+	19, // 7: flight.CreateFlightRequest.departure_time:type_name -> google.protobuf.Timestamp
+	19, // 8: flight.CreateFlightRequest.arrival_time:type_name -> google.protobuf.Timestamp
 	3,  // 9: flight.FlightService.SearchFlights:input_type -> flight.SearchFlightsRequest
 	15, // 10: flight.FlightService.CreateFlight:input_type -> flight.CreateFlightRequest
 	5,  // 11: flight.FlightService.GetFlightDetails:input_type -> flight.GetFlightDetailsRequest
@@ -1120,15 +1225,17 @@ var file_flight_proto_depIdxs = []int32{
 	7,  // 13: flight.FlightService.ListAirports:input_type -> flight.ListAirportsRequest
 	11, // 14: flight.FlightService.ReserveSeat:input_type -> flight.ReserveSeatRequest
 	13, // 15: flight.FlightService.ReleaseSeat:input_type -> flight.ReleaseSeatRequest
-	4,  // 16: flight.FlightService.SearchFlights:output_type -> flight.SearchFlightsResponse
-	16, // 17: flight.FlightService.CreateFlight:output_type -> flight.CreateFlightResponse
-	6,  // 18: flight.FlightService.GetFlightDetails:output_type -> flight.GetFlightDetailsResponse
-	10, // 19: flight.FlightService.GetFlightSeats:output_type -> flight.GetFlightSeatsResponse
-	8,  // 20: flight.FlightService.ListAirports:output_type -> flight.ListAirportsResponse
-	12, // 21: flight.FlightService.ReserveSeat:output_type -> flight.ReserveSeatResponse
-	14, // 22: flight.FlightService.ReleaseSeat:output_type -> flight.ReleaseSeatResponse
-	16, // [16:23] is the sub-list for method output_type
-	9,  // [9:16] is the sub-list for method input_type
+	17, // 16: flight.FlightService.ConfirmSeat:input_type -> flight.ConfirmSeatRequest
+	4,  // 17: flight.FlightService.SearchFlights:output_type -> flight.SearchFlightsResponse
+	16, // 18: flight.FlightService.CreateFlight:output_type -> flight.CreateFlightResponse
+	6,  // 19: flight.FlightService.GetFlightDetails:output_type -> flight.GetFlightDetailsResponse
+	10, // 20: flight.FlightService.GetFlightSeats:output_type -> flight.GetFlightSeatsResponse
+	8,  // 21: flight.FlightService.ListAirports:output_type -> flight.ListAirportsResponse
+	12, // 22: flight.FlightService.ReserveSeat:output_type -> flight.ReserveSeatResponse
+	14, // 23: flight.FlightService.ReleaseSeat:output_type -> flight.ReleaseSeatResponse
+	18, // 24: flight.FlightService.ConfirmSeat:output_type -> flight.ConfirmSeatResponse
+	17, // [17:25] is the sub-list for method output_type
+	9,  // [9:17] is the sub-list for method input_type
 	9,  // [9:9] is the sub-list for extension type_name
 	9,  // [9:9] is the sub-list for extension extendee
 	0,  // [0:9] is the sub-list for field type_name
@@ -1145,7 +1252,7 @@ func file_flight_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_flight_proto_rawDesc), len(file_flight_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   17,
+			NumMessages:   19,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

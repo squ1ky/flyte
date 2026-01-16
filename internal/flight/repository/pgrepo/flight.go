@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/squ1ky/flyte/internal/flight/domain"
 )
@@ -43,7 +44,7 @@ func (r *FlightRepo) CreateFlight(ctx context.Context, f *domain.Flight) (int64,
 
 	payload, err := json.Marshal(f)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to marshal flight for outbox: %w", err)
 	}
 
 	queryOutbox := `

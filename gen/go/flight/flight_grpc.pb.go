@@ -26,6 +26,7 @@ const (
 	FlightService_ListAirports_FullMethodName     = "/flight.FlightService/ListAirports"
 	FlightService_ReserveSeat_FullMethodName      = "/flight.FlightService/ReserveSeat"
 	FlightService_ReleaseSeat_FullMethodName      = "/flight.FlightService/ReleaseSeat"
+	FlightService_ConfirmSeat_FullMethodName      = "/flight.FlightService/ConfirmSeat"
 )
 
 // FlightServiceClient is the client API for FlightService service.
@@ -39,6 +40,7 @@ type FlightServiceClient interface {
 	ListAirports(ctx context.Context, in *ListAirportsRequest, opts ...grpc.CallOption) (*ListAirportsResponse, error)
 	ReserveSeat(ctx context.Context, in *ReserveSeatRequest, opts ...grpc.CallOption) (*ReserveSeatResponse, error)
 	ReleaseSeat(ctx context.Context, in *ReleaseSeatRequest, opts ...grpc.CallOption) (*ReleaseSeatResponse, error)
+	ConfirmSeat(ctx context.Context, in *ConfirmSeatRequest, opts ...grpc.CallOption) (*ConfirmSeatResponse, error)
 }
 
 type flightServiceClient struct {
@@ -119,6 +121,16 @@ func (c *flightServiceClient) ReleaseSeat(ctx context.Context, in *ReleaseSeatRe
 	return out, nil
 }
 
+func (c *flightServiceClient) ConfirmSeat(ctx context.Context, in *ConfirmSeatRequest, opts ...grpc.CallOption) (*ConfirmSeatResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ConfirmSeatResponse)
+	err := c.cc.Invoke(ctx, FlightService_ConfirmSeat_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FlightServiceServer is the server API for FlightService service.
 // All implementations must embed UnimplementedFlightServiceServer
 // for forward compatibility.
@@ -130,6 +142,7 @@ type FlightServiceServer interface {
 	ListAirports(context.Context, *ListAirportsRequest) (*ListAirportsResponse, error)
 	ReserveSeat(context.Context, *ReserveSeatRequest) (*ReserveSeatResponse, error)
 	ReleaseSeat(context.Context, *ReleaseSeatRequest) (*ReleaseSeatResponse, error)
+	ConfirmSeat(context.Context, *ConfirmSeatRequest) (*ConfirmSeatResponse, error)
 	mustEmbedUnimplementedFlightServiceServer()
 }
 
@@ -160,6 +173,9 @@ func (UnimplementedFlightServiceServer) ReserveSeat(context.Context, *ReserveSea
 }
 func (UnimplementedFlightServiceServer) ReleaseSeat(context.Context, *ReleaseSeatRequest) (*ReleaseSeatResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReleaseSeat not implemented")
+}
+func (UnimplementedFlightServiceServer) ConfirmSeat(context.Context, *ConfirmSeatRequest) (*ConfirmSeatResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConfirmSeat not implemented")
 }
 func (UnimplementedFlightServiceServer) mustEmbedUnimplementedFlightServiceServer() {}
 func (UnimplementedFlightServiceServer) testEmbeddedByValue()                       {}
@@ -308,6 +324,24 @@ func _FlightService_ReleaseSeat_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FlightService_ConfirmSeat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfirmSeatRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FlightServiceServer).ConfirmSeat(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FlightService_ConfirmSeat_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FlightServiceServer).ConfirmSeat(ctx, req.(*ConfirmSeatRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FlightService_ServiceDesc is the grpc.ServiceDesc for FlightService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -342,6 +376,10 @@ var FlightService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ReleaseSeat",
 			Handler:    _FlightService_ReleaseSeat_Handler,
+		},
+		{
+			MethodName: "ConfirmSeat",
+			Handler:    _FlightService_ConfirmSeat_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

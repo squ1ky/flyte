@@ -38,7 +38,14 @@ func (s *FlightService) CreateFlight(ctx context.Context, f *domain.Flight) (int
 }
 
 func (s *FlightService) SearchFlights(ctx context.Context, from, to string, date time.Time, passengerCount int) ([]domain.Flight, error) {
-	flights, err := s.flightSearcher.Search(ctx, from, to, date, passengerCount)
+	filter := repository.SearchFilter{
+		FromAirport:    from,
+		ToAirport:      to,
+		Date:           date,
+		PassengerCount: passengerCount,
+	}
+
+	flights, err := s.flightSearcher.Search(ctx, filter)
 	if err != nil {
 		s.logger.Error("failed to search flights in elastic", "error", err)
 		return nil, fmt.Errorf("search failed: %w", err)
@@ -93,8 +100,23 @@ func (s *FlightService) ReleaseSeat(ctx context.Context, flightID int64, seatNum
 	return nil
 }
 
+func (s *FlightService) ConfirmSeat(ctx context.Context, flightID int64, seatNumber string) error {
+	err := s.flightStorage.ConfirmSeat(ctx, flightID, seatNumber)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *FlightService) runAsyncSyncElastic(flightID int64) {
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				s.logger.Info("panic in async elastic sync", "flight_id", flightID, "panic", r)
+			}
+		}()
+
 		bgCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 

@@ -15,6 +15,7 @@ service FlightService {
 
   rpc ReserveSeat (ReserveSeatRequest) returns (ReserveSeatResponse);
   rpc ReleaseSeat (ReleaseSeatRequest) returns (ReleaseSeatResponse);
+  rpc ConfirmSeat (ConfirmSeatRequest) returns (ConfirmSeatResponse);
 }
 
 message Airport {
@@ -110,4 +111,13 @@ message CreateFlightRequest {
 
 message CreateFlightResponse {
   int64 flight_id = 1;
+}
+
+message ConfirmSeatRequest {
+  int64 flight_id = 1;
+  string seat_number = 2;
+}
+
+message ConfirmSeatResponse {
+  bool success = 1;
 }

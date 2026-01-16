@@ -44,6 +44,7 @@ func (c *SeatCleaner) Start(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			c.logger.Info("stopping seat cleaner worker")
+			return
 		case <-ticker.C:
 			c.processExpiredReservations(ctx)
 		}

@@ -88,6 +88,8 @@ func (p *ElasticOutboxProcessor) processBatch(ctx context.Context) {
 		events = append(events, evt)
 	}
 
+	rows.Close()
+
 	for _, evt := range events {
 		var flight domain.Flight
 		if err := json.Unmarshal(evt.Payload, &flight); err != nil {

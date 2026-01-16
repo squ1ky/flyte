@@ -11,15 +11,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-const (
-	ErrAirportsRequired = "airports are required"
-	ErrFlightIDRequired = "flight_id is required"
-
-	ErrFlightNotFound    = "flight not found"
-	ErrSeatNotFound      = "seat not found"
-	ErrSeatAlreadyBooked = "seat already booked"
-)
-
 type Server struct {
 	flightv1.UnimplementedFlightServiceServer
 	flightService *service.FlightService
@@ -32,8 +23,8 @@ func NewServer(flightService *service.FlightService) *Server {
 }
 
 func (s *Server) SearchFlights(ctx context.Context, req *flightv1.SearchFlightsRequest) (*flightv1.SearchFlightsResponse, error) {
-	if req.FromAirport == "" || req.ToAirport == "" {
-		return nil, status.Error(codes.InvalidArgument, ErrAirportsRequired)
+	if err := validateSearchFlightsRequest(req); err != nil {
+		return nil, err
 	}
 
 	flights, err := s.flightService.SearchFlights(
@@ -56,6 +47,10 @@ func (s *Server) SearchFlights(ctx context.Context, req *flightv1.SearchFlightsR
 }
 
 func (s *Server) CreateFlight(ctx context.Context, req *flightv1.CreateFlightRequest) (*flightv1.CreateFlightResponse, error) {
+	if err := validateCreateFlightRequest(req); err != nil {
+		return nil, err
+	}
+
 	flight := &domain.Flight{
 		FlightNumber:     req.FlightNumber,
 		DepartureAirport: req.DepartureAirport,
@@ -76,14 +71,14 @@ func (s *Server) CreateFlight(ctx context.Context, req *flightv1.CreateFlightReq
 }
 
 func (s *Server) GetFlightDetails(ctx context.Context, req *flightv1.GetFlightDetailsRequest) (*flightv1.GetFlightDetailsResponse, error) {
-	if req.FlightId == 0 {
-		return nil, status.Error(codes.InvalidArgument, ErrFlightIDRequired)
+	if err := validateGetFlightDetailsRequest(req); err != nil {
+		return nil, err
 	}
 
 	flight, err := s.flightService.GetFlightDetails(ctx, req.FlightId)
 	if err != nil {
 		if errors.Is(err, domain.ErrFlightNotFound) {
-			return nil, status.Error(codes.NotFound, ErrFlightNotFound)
+			return nil, status.Error(codes.NotFound, domain.ErrFlightNotFound.Error())
 		}
 		return nil, status.Errorf(codes.Internal, "failed to get flight details: %v", err)
 	}
@@ -92,14 +87,14 @@ func (s *Server) GetFlightDetails(ctx context.Context, req *flightv1.GetFlightDe
 }
 
 func (s *Server) GetFlightSeats(ctx context.Context, req *flightv1.GetFlightSeatsRequest) (*flightv1.GetFlightSeatsResponse, error) {
-	if req.FlightId == 0 {
-		return nil, status.Error(codes.InvalidArgument, ErrFlightIDRequired)
+	if err := validateGetFlightSeatsRequest(req); err != nil {
+		return nil, err
 	}
 
 	seats, err := s.flightService.GetFlightSeats(ctx, req.FlightId)
 	if err != nil {
 		if errors.Is(err, domain.ErrFlightNotFound) {
-			return nil, status.Error(codes.NotFound, ErrFlightNotFound)
+			return nil, status.Error(codes.NotFound, domain.ErrFlightNotFound.Error())
 		}
 		return nil, status.Errorf(codes.Internal, "failed to get seats: %v", err)
 	}
@@ -137,17 +132,17 @@ func (s *Server) ListAirports(ctx context.Context, req *flightv1.ListAirportsReq
 }
 
 func (s *Server) ReserveSeat(ctx context.Context, req *flightv1.ReserveSeatRequest) (*flightv1.ReserveSeatResponse, error) {
-	if req.FlightId == 0 {
-		return nil, status.Error(codes.InvalidArgument, ErrFlightIDRequired)
+	if err := validateReserveSeatRequest(req); err != nil {
+		return nil, err
 	}
 
 	seatID, err := s.flightService.ReserveSeat(ctx, req.FlightId, req.SeatNumber)
 	if err != nil {
 		if errors.Is(err, domain.ErrSeatAlreadyBooked) {
-			return nil, status.Error(codes.AlreadyExists, ErrSeatAlreadyBooked)
+			return nil, status.Error(codes.AlreadyExists, domain.ErrSeatAlreadyBooked.Error())
 		}
 		if errors.Is(err, domain.ErrSeatNotFound) {
-			return nil, status.Error(codes.NotFound, ErrSeatNotFound)
+			return nil, status.Error(codes.NotFound, domain.ErrSeatNotFound.Error())
 		}
 		return nil, status.Errorf(codes.Internal, "failed to reserve seat: %v", err)
 	}
@@ -156,10 +151,29 @@ func (s *Server) ReserveSeat(ctx context.Context, req *flightv1.ReserveSeatReque
 }
 
 func (s *Server) ReleaseSeat(ctx context.Context, req *flightv1.ReleaseSeatRequest) (*flightv1.ReleaseSeatResponse, error) {
+	if err := validateReleaseSeatRequest(req); err != nil {
+		return nil, err
+	}
+
 	if err := s.flightService.ReleaseSeat(ctx, req.FlightId, req.SeatNumber); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to release seat: %v", err)
 	}
 	return &flightv1.ReleaseSeatResponse{Success: true}, nil
+}
+
+func (s *Server) ConfirmSeat(ctx context.Context, req *flightv1.ConfirmSeatRequest) (*flightv1.ConfirmSeatResponse, error) {
+	if err := validateConfirmSeatRequest(req); err != nil {
+		return nil, err
+	}
+
+	if err := s.flightService.ConfirmSeat(ctx, req.FlightId, req.SeatNumber); err != nil {
+		if errors.Is(err, domain.ErrSeatNotFound) {
+			return nil, status.Error(codes.NotFound, domain.ErrSeatNotFound.Error())
+		}
+		return nil, status.Errorf(codes.Internal, "failed to confirm seat: %v", err)
+	}
+
+	return &flightv1.ConfirmSeatResponse{Success: true}, nil
 }
 
 func mapFlightToProto(f *domain.Flight) *flightv1.Flight {
@@ -171,7 +185,7 @@ func mapFlightToProto(f *domain.Flight) *flightv1.Flight {
 		DepartureTime:    timestamppb.New(f.DepartureTime),
 		ArrivalTime:      timestamppb.New(f.ArrivalTime),
 		PriceCents:       f.PriceCents,
-		Status:           f.Status,
+		Status:           string(f.Status),
 		TotalSeats:       int32(f.TotalSeats),
 		AvailableSeats:   int32(f.AvailableSeats),
 	}

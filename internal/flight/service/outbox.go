@@ -50,7 +50,7 @@ func (p *ElasticOutboxProcessor) processBatch(ctx context.Context) {
 		SELECT id, payload
 		FROM flight_outbox
 		WHERE status = 'PENDING'
-		ORDER BY created_at DESC
+		ORDER BY created_at ASC
 		LIMIT 10
 		FOR UPDATE SKIP LOCKED
 	`
@@ -74,28 +74,35 @@ func (p *ElasticOutboxProcessor) processBatch(ctx context.Context) {
 		}
 	}(rows)
 
+	type OutboxEvent struct {
+		ID      string
+		Payload []byte
+	}
+	var events []OutboxEvent
+
 	for rows.Next() {
-		var id string
-		var payload []byte
-		if err := rows.Scan(&id, &payload); err != nil {
+		var evt OutboxEvent
+		if err := rows.Scan(&evt.ID, &evt.Payload); err != nil {
 			continue
 		}
+		events = append(events, evt)
+	}
 
+	for _, evt := range events {
 		var flight domain.Flight
-		if err := json.Unmarshal(payload, &flight); err != nil {
-			p.logger.Error("failed to unmarshal flight", "id", id, "error", err)
-
-			_, _ = tx.ExecContext(ctx, "UPDATE flight_outbox SET STATUS = 'FAILED' WHERE id = $1", id)
+		if err := json.Unmarshal(evt.Payload, &flight); err != nil {
+			p.logger.Error("failed to unmarshal flight", "id", evt.ID, "error", err)
+			_, _ = tx.ExecContext(ctx, "UPDATE flight_outbox SET STATUS = 'FAILED' WHERE id = $1", evt.ID)
 			continue
 		}
 
 		if err := p.flightSearcher.IndexFlight(ctx, &flight); err != nil {
-			p.logger.Error("failed to index flight", "id", id, "error", err)
+			p.logger.Error("failed to index flight", "id", evt.ID, "error", err)
 			return
 		}
 
-		if _, err := tx.ExecContext(ctx, "DELETE FROM flight_outbox WHERE id = $1", id); err != nil {
-			p.logger.Error("failed to delete processed event", "id", id, "error", err)
+		if _, err := tx.ExecContext(ctx, "DELETE FROM flight_outbox WHERE id = $1", evt.ID); err != nil {
+			p.logger.Error("failed to delete processed event", "id", evt.ID, "error", err)
 			return
 		}
 	}

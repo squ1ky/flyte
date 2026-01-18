@@ -14,11 +14,11 @@ import (
 
 const (
 	indexName = "flights"
-	
+
 	fieldDepAirport     = "departure_airport"
 	fieldArrAirport     = "arrival_airport"
 	fieldDepTime        = "departure_time"
-	fieldPriceCents     = "price_cents"
+	fieldBasePrice      = "base_price_cents"
 	fieldAvailableSeats = "available_seats"
 )
 
@@ -27,7 +27,7 @@ type flightDocument struct {
 	DepartureAirport string    `json:"departure_airport"`
 	ArrivalAirport   string    `json:"arrival_airport"`
 	DepartureTime    time.Time `json:"departure_time"`
-	PriceCents       int64     `json:"price_cents"`
+	BasePriceCents   int64     `json:"base_price_cents"`
 	AvailableSeats   int       `json:"available_seats"`
 }
 
@@ -57,7 +57,7 @@ func (r *FlightSearchRepo) IndexFlight(ctx context.Context, f *domain.Flight) er
 		DepartureAirport: f.DepartureAirport,
 		ArrivalAirport:   f.ArrivalAirport,
 		DepartureTime:    f.DepartureTime,
-		PriceCents:       f.PriceCents,
+		BasePriceCents:   f.BasePriceCents,
 		AvailableSeats:   f.AvailableSeats,
 	}
 
@@ -153,7 +153,7 @@ func (r *FlightSearchRepo) buildSearchQuery(f repository.SearchFilter) map[strin
 			},
 		},
 		"sort": []map[string]interface{}{
-			{fieldPriceCents: "asc"},
+			{fieldBasePrice: "asc"},
 		},
 	}
 }
@@ -178,7 +178,7 @@ func (r *FlightSearchRepo) parseSearchResponse(body io.ReadCloser) ([]domain.Fli
 			DepartureAirport: hit.Source.DepartureAirport,
 			ArrivalAirport:   hit.Source.ArrivalAirport,
 			DepartureTime:    hit.Source.DepartureTime,
-			PriceCents:       hit.Source.PriceCents,
+			BasePriceCents:   hit.Source.BasePriceCents,
 			AvailableSeats:   hit.Source.AvailableSeats,
 		})
 	}

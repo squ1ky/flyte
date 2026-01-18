@@ -33,7 +33,6 @@ func (s *FlightService) CreateFlight(ctx context.Context, f *domain.Flight) (int
 	if err != nil {
 		return 0, err
 	}
-
 	return id, nil
 }
 
@@ -86,8 +85,6 @@ func (s *FlightService) ReserveSeat(ctx context.Context, flightID int64, seatNum
 	if err != nil {
 		return 0, err
 	}
-
-	s.runAsyncSyncElastic(flightID)
 	return seatID, nil
 }
 
@@ -95,8 +92,6 @@ func (s *FlightService) ReleaseSeat(ctx context.Context, flightID int64, seatNum
 	if err := s.flightStorage.ReleaseSeat(ctx, flightID, seatNumber); err != nil {
 		return err
 	}
-
-	s.runAsyncSyncElastic(flightID)
 	return nil
 }
 
@@ -105,35 +100,5 @@ func (s *FlightService) ConfirmSeat(ctx context.Context, flightID int64, seatNum
 	if err != nil {
 		return err
 	}
-
 	return nil
-}
-
-func (s *FlightService) runAsyncSyncElastic(flightID int64) {
-	go func() {
-		defer func() {
-			if r := recover(); r != nil {
-				s.logger.Info("panic in async elastic sync", "flight_id", flightID, "panic", r)
-			}
-		}()
-
-		bgCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-
-		if err := s.syncSeatsInElastic(bgCtx, flightID); err != nil {
-			s.logger.Error("async elastic sync failed", "flight_id", flightID, "error", err)
-		}
-	}()
-}
-
-func (s *FlightService) syncSeatsInElastic(ctx context.Context, flightID int64) error {
-	flight, err := s.flightStorage.GetByID(ctx, flightID)
-	if err != nil {
-		return err
-	}
-	if flight == nil {
-		return errors.New("flight disappeared from db")
-	}
-
-	return s.flightSearcher.UpdateAvailableSeats(ctx, flightID, flight.AvailableSeats)
 }

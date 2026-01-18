@@ -16,6 +16,10 @@ service FlightService {
   rpc ReserveSeat (ReserveSeatRequest) returns (ReserveSeatResponse);
   rpc ReleaseSeat (ReleaseSeatRequest) returns (ReleaseSeatResponse);
   rpc ConfirmSeat (ConfirmSeatRequest) returns (ConfirmSeatResponse);
+
+  rpc CreateAircraft (CreateAircraftRequest) returns (CreateAircraftResponse);
+  rpc ListAircrafts (ListAircraftsRequest) returns (ListAircraftsResponse);
+  rpc AddAircraftSeats (AddAircraftSeatsRequest) returns (AddAircraftSeatsResponse);
 }
 
 message Airport {
@@ -32,7 +36,7 @@ message Flight {
   string arrival_airport = 4;
   google.protobuf.Timestamp departure_time = 5;
   google.protobuf.Timestamp arrival_time = 6;
-  int64 price_cents = 7;
+  int64 base_price_cents = 7;
   string status = 8;
   int32 total_seats = 9;
   int32 available_seats = 10;
@@ -43,6 +47,18 @@ message Seat {
   string seat_number = 2;
   bool is_booked = 3;
   double price_multiplier = 4;
+}
+
+message Aircraft {
+  int64 id = 1;
+  string model = 2;
+  int32 total_seats = 3;
+}
+
+message AircraftSeatTemplate {
+  string seat_number = 1;
+  string seat_class = 2;
+  double price_multiplier = 3;
 }
 
 message SearchFlightsRequest {
@@ -56,6 +72,20 @@ message SearchFlightsResponse {
   repeated Flight flights = 1;
 }
 
+message CreateFlightRequest {
+  string flight_number = 1;
+  int64 aircraft_id = 2;
+  string departure_airport = 3;
+  string arrival_airport = 4;
+  google.protobuf.Timestamp departure_time = 5;
+  google.protobuf.Timestamp arrival_time = 6;
+  int64 base_price_cents = 7;
+}
+
+message CreateFlightResponse {
+  int64 flight_id = 1;
+}
+
 message GetFlightDetailsRequest {
   int64 flight_id = 1;
 }
@@ -64,20 +94,20 @@ message GetFlightDetailsResponse {
   Flight flight = 1;
 }
 
-message ListAirportsRequest {
-  string query = 1;
-}
-
-message ListAirportsResponse {
-  repeated Airport airports = 1;
-}
-
 message GetFlightSeatsRequest {
   int64 flight_id = 1;
 }
 
 message GetFlightSeatsResponse {
   repeated Seat seats = 1;
+}
+
+message ListAirportsRequest {
+  string query = 1;
+}
+
+message ListAirportsResponse {
+  repeated Airport airports = 1;
 }
 
 message ReserveSeatRequest {
@@ -99,25 +129,35 @@ message ReleaseSeatResponse {
   bool success = 1;
 }
 
-message CreateFlightRequest {
-  string flight_number = 1;
-  string departure_airport = 2;
-  string arrival_airport = 3;
-  google.protobuf.Timestamp departure_time = 4;
-  google.protobuf.Timestamp arrival_time = 5;
-  int64 price_cents = 6;
-  int32 total_seats = 7;
-}
-
-message CreateFlightResponse {
-  int64 flight_id = 1;
-}
-
 message ConfirmSeatRequest {
   int64 flight_id = 1;
   string seat_number = 2;
 }
 
 message ConfirmSeatResponse {
+  bool success = 1;
+}
+
+message CreateAircraftRequest {
+  string model = 1;
+  int32 total_seats = 2;
+}
+
+message CreateAircraftResponse {
+  int64 aircraft_id = 1;
+}
+
+message ListAircraftsRequest {}
+
+message ListAircraftsResponse {
+  repeated Aircraft aircrafts = 1;
+}
+
+message AddAircraftSeatsRequest {
+  int64 aircraft_id = 1;
+  repeated AircraftSeatTemplate seats = 2;
+}
+
+message AddAircraftSeatsResponse {
   bool success = 1;
 }

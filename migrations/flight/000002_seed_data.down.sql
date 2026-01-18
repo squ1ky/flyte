@@ -1,6 +1,0 @@
-DELETE FROM seats;
-DELETE FROM flights;
-DELETE FROM airports;
-
-ALTER SEQUENCE flights_id_seq RESTART WITH 1;
-ALTER SEQUENCE seats_id_seq RESTART WITH 1;

@@ -5,6 +5,7 @@ import (
 	flightv1 "github.com/squ1ky/flyte/gen/go/flight"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -20,6 +21,7 @@ func (h *FlightHandler) SearchFlights(c *gin.Context) {
 	from := c.Query("from")
 	to := c.Query("to")
 	dateStr := c.Query("date")
+	passengersStr := c.Query("passengers")
 
 	if from == "" || to == "" || dateStr == "" {
 		newErrorResponse(c, http.StatusBadRequest, "from, to and date are required")
@@ -32,7 +34,10 @@ func (h *FlightHandler) SearchFlights(c *gin.Context) {
 		return
 	}
 
-	passengers := 1
+	passengers, err := strconv.Atoi(passengersStr)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid passengers")
+	}
 
 	req := &flightv1.SearchFlightsRequest{
 		FromAirport:    from,
@@ -52,12 +57,12 @@ func (h *FlightHandler) SearchFlights(c *gin.Context) {
 
 type createFlightInput struct {
 	FlightNumber     string  `json:"flight_number" binding:"required"`
+	AircraftID       int64   `json:"aircraft_id" binding:"required"`
 	DepartureAirport string  `json:"departure_airport" binding:"required,len=3"`
 	ArrivalAirport   string  `json:"arrival_airport" binding:"required,len=3"`
 	DepartureTime    string  `json:"departure_time" binding:"required"`
 	ArrivalTime      string  `json:"arrival_time" binding:"required"`
-	Price            float64 `json:"price" binding:"required,gt=0"`
-	TotalSeats       int32   `json:"total_seats" binding:"required,gt=0"`
+	BasePrice        float64 `json:"price" binding:"required,gt=0"`
 }
 
 func (h *FlightHandler) CreateFlight(c *gin.Context) {
@@ -81,12 +86,12 @@ func (h *FlightHandler) CreateFlight(c *gin.Context) {
 
 	req := &flightv1.CreateFlightRequest{
 		FlightNumber:     input.FlightNumber,
+		AircraftId:       input.AircraftID,
 		DepartureAirport: input.DepartureAirport,
 		ArrivalAirport:   input.ArrivalAirport,
 		DepartureTime:    timestamppb.New(depTime),
 		ArrivalTime:      timestamppb.New(arrTime),
-		PriceCents:       int64(input.Price * 100),
-		TotalSeats:       input.TotalSeats,
+		BasePriceCents:   int64(input.BasePrice * 100),
 	}
 
 	resp, err := h.client.CreateFlight(c.Request.Context(), req)
@@ -142,4 +147,85 @@ func (h *FlightHandler) ListAirports(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp.Airports)
+}
+
+type createAircraftInput struct {
+	Model      string `json:"model" binding:"required"`
+	TotalSeats int32  `json:"total_seats" binding:"required,gt=0"`
+}
+
+func (h *FlightHandler) CreateAircraft(c *gin.Context) {
+	var input createAircraftInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	resp, err := h.client.CreateAircraft(c.Request.Context(), &flightv1.CreateAircraftRequest{
+		Model:      input.Model,
+		TotalSeats: input.TotalSeats,
+	})
+	if err != nil {
+		mapGRPCErr(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"aircraft_id": resp.AircraftId,
+	})
+}
+
+type seatTemplateInput struct {
+	SeatNumber      string  `json:"seat_number" binding:"required"`
+	SeatClass       string  `json:"seat_class" binding:"required"`
+	PriceMultiplier float64 `json:"price_multiplier"`
+}
+
+type addAircraftSeatsInput struct {
+	Seats []seatTemplateInput `json:"seats" binding:"required,min=1"`
+}
+
+func (h *FlightHandler) AddAircraftSeats(c *gin.Context) {
+	aircraftID, err := parseIDParam(c, "id")
+	if err != nil {
+		return
+	}
+
+	var input addAircraftSeatsInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	pbSeats := make([]*flightv1.AircraftSeatTemplate, 0, len(input.Seats))
+	for _, s := range input.Seats {
+		mult := s.PriceMultiplier
+		if mult <= 0 {
+			mult = 1
+		}
+
+		pbSeats = append(pbSeats, &flightv1.AircraftSeatTemplate{
+			SeatNumber:      s.SeatNumber,
+			SeatClass:       s.SeatClass,
+			PriceMultiplier: mult,
+		})
+	}
+
+	_, err = h.client.AddAircraftSeats(c.Request.Context(), &flightv1.AddAircraftSeatsRequest{
+		AircraftId: aircraftID,
+		Seats:      pbSeats,
+	})
+	if err != nil {
+		mapGRPCErr(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true})
+}
+
+func (h *FlightHandler) ListAircrafts(c *gin.Context) {
+	resp, err := h.client.ListAircrafts(c.Request.Context(), &flightv1.ListAircraftsRequest{})
+	if err != nil {
+		mapGRPCErr(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, resp.Aircrafts)
 }

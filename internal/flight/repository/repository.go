@@ -16,13 +16,23 @@ type SearchFilter struct {
 type FlightStorage interface {
 	CreateFlight(ctx context.Context, flight *domain.Flight) (int64, error)
 	GetByID(ctx context.Context, id int64) (*domain.Flight, error)
-	GetSeatsByFlightID(ctx context.Context, flightID int64) ([]domain.Seat, error)
-	GetAirports(ctx context.Context) ([]domain.Airport, error)
 	DeleteFlight(ctx context.Context, id int64) error
 
+	GetSeatsByFlightID(ctx context.Context, flightID int64) ([]domain.Seat, error)
 	BookSeat(ctx context.Context, flightID int64, seatNumber string) (int64, error)
 	ReleaseSeat(ctx context.Context, flightID int64, seatNumber string) error
 	ConfirmSeat(ctx context.Context, flightID int64, seatNumber string) error
+
+	GetAirports(ctx context.Context) ([]domain.Airport, error)
+}
+
+type AircraftStorage interface {
+	CreateAircraft(ctx context.Context, model string, totalSeats int) (int64, error)
+	GetAircraftByID(ctx context.Context, aircraftID int64) (*domain.Aircraft, error)
+	GetAircrafts(ctx context.Context) ([]domain.Aircraft, error)
+
+	AddAircraftSeats(ctx context.Context, aircraftID int64, seats []domain.AircraftSeat) error
+	GetAircraftSeats(ctx context.Context, aircraftID int64) ([]domain.AircraftSeat, error)
 }
 
 type FlightSearcher interface {

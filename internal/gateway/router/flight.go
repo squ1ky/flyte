@@ -9,16 +9,18 @@ import (
 func RegisterFlightRoutes(rg *gin.RouterGroup, h *handler.GatewayHandler, userClient userv1.UserServiceClient) {
 	flights := rg.Group("/flights")
 	{
-		flights.GET("/search", h.Flight.SearchFlights)
+		flights.GET("", h.Flight.SearchFlights)
 		flights.GET("/:id", h.Flight.GetFlightDetails)
-
 		flights.GET("/:id/seats", h.Flight.GetFlightSeats)
 	}
 
 	rg.GET("/airports", h.Flight.ListAirports)
+	rg.GET("/aircrafts", h.Flight.ListAircrafts)
 
-	admin := rg.Group("/flights", AuthMiddleware(userClient), AdminOnlyMiddleware())
+	admin := rg.Group("", AuthMiddleware(userClient), AdminOnlyMiddleware())
 	{
-		admin.POST("/", h.Flight.CreateFlight)
+		admin.POST("/flights", h.Flight.CreateFlight)
+		admin.POST("/aircrafts", h.Flight.CreateAircraft)
+		admin.POST("/aircrafts/:id/seats", h.Flight.AddAircraftSeats)
 	}
 }

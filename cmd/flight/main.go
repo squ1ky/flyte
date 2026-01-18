@@ -9,6 +9,7 @@ import (
 	"github.com/squ1ky/flyte/internal/flight/repository/elastic"
 	"github.com/squ1ky/flyte/internal/flight/repository/pgrepo"
 	"github.com/squ1ky/flyte/internal/flight/service"
+	"github.com/squ1ky/flyte/internal/flight/service/worker"
 	"github.com/squ1ky/flyte/pkg/bootstrap"
 	"github.com/squ1ky/flyte/pkg/db"
 	"github.com/squ1ky/flyte/pkg/logger"
@@ -55,17 +56,20 @@ func main() {
 	log.Info("connected to elasticsearch", slog.String("url", cfg.Elastic.URL))
 
 	flightRepo := pgrepo.NewFlightRepo(database)
+	aircraftRepo := pgrepo.NewAircraftRepo(database)
+
 	flightService := service.NewFlightService(flightRepo, esRepo, log)
+	aircraftService := service.NewAircraftService(aircraftRepo, log)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	outboxProcessor := service.NewElasticOutboxProcessor(database, esRepo, log)
-	seatCleaner := service.NewSeatCleaner(database, flightRepo, esRepo, log)
-	go outboxProcessor.Start(ctx)
+	esSyncWorker := worker.NewElasticSyncWorker(database, flightRepo, esRepo, log)
+	seatCleaner := worker.NewSeatCleaner(database, log, cfg.Cleaner.Interval, cfg.Cleaner.ReservationTTL)
+	go esSyncWorker.Start(ctx)
 	go seatCleaner.Start(ctx)
 
-	grpcServerImpl := flightgrpc.NewServer(flightService)
+	grpcServerImpl := flightgrpc.NewServer(flightService, aircraftService)
 
 	grpcServer := grpc.NewServer()
 	flightv1.RegisterFlightServiceServer(grpcServer, grpcServerImpl)

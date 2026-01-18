@@ -11,6 +11,7 @@ type Config struct {
 	GRPC    GRPCConfig
 	DB      DBConfig
 	Elastic ElasticConfig
+	Cleaner CleanerConfig
 }
 
 type GRPCConfig struct {
@@ -29,6 +30,11 @@ type DBConfig struct {
 
 type ElasticConfig struct {
 	URL string `env:"ELASTIC_URL" env-default:"http://localhost:9200"`
+}
+
+type CleanerConfig struct {
+	Interval       time.Duration `env:"CLEANER_INTERVAL" env-default:"1m"`
+	ReservationTTL time.Duration `env:"RESERVATION_TTL" env-default:"15m"`
 }
 
 func Load() (*Config, error) {

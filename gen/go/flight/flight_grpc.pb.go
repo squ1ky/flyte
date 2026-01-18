@@ -27,6 +27,9 @@ const (
 	FlightService_ReserveSeat_FullMethodName      = "/flight.FlightService/ReserveSeat"
 	FlightService_ReleaseSeat_FullMethodName      = "/flight.FlightService/ReleaseSeat"
 	FlightService_ConfirmSeat_FullMethodName      = "/flight.FlightService/ConfirmSeat"
+	FlightService_CreateAircraft_FullMethodName   = "/flight.FlightService/CreateAircraft"
+	FlightService_ListAircrafts_FullMethodName    = "/flight.FlightService/ListAircrafts"
+	FlightService_AddAircraftSeats_FullMethodName = "/flight.FlightService/AddAircraftSeats"
 )
 
 // FlightServiceClient is the client API for FlightService service.
@@ -41,6 +44,9 @@ type FlightServiceClient interface {
 	ReserveSeat(ctx context.Context, in *ReserveSeatRequest, opts ...grpc.CallOption) (*ReserveSeatResponse, error)
 	ReleaseSeat(ctx context.Context, in *ReleaseSeatRequest, opts ...grpc.CallOption) (*ReleaseSeatResponse, error)
 	ConfirmSeat(ctx context.Context, in *ConfirmSeatRequest, opts ...grpc.CallOption) (*ConfirmSeatResponse, error)
+	CreateAircraft(ctx context.Context, in *CreateAircraftRequest, opts ...grpc.CallOption) (*CreateAircraftResponse, error)
+	ListAircrafts(ctx context.Context, in *ListAircraftsRequest, opts ...grpc.CallOption) (*ListAircraftsResponse, error)
+	AddAircraftSeats(ctx context.Context, in *AddAircraftSeatsRequest, opts ...grpc.CallOption) (*AddAircraftSeatsResponse, error)
 }
 
 type flightServiceClient struct {
@@ -131,6 +137,36 @@ func (c *flightServiceClient) ConfirmSeat(ctx context.Context, in *ConfirmSeatRe
 	return out, nil
 }
 
+func (c *flightServiceClient) CreateAircraft(ctx context.Context, in *CreateAircraftRequest, opts ...grpc.CallOption) (*CreateAircraftResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateAircraftResponse)
+	err := c.cc.Invoke(ctx, FlightService_CreateAircraft_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *flightServiceClient) ListAircrafts(ctx context.Context, in *ListAircraftsRequest, opts ...grpc.CallOption) (*ListAircraftsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListAircraftsResponse)
+	err := c.cc.Invoke(ctx, FlightService_ListAircrafts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *flightServiceClient) AddAircraftSeats(ctx context.Context, in *AddAircraftSeatsRequest, opts ...grpc.CallOption) (*AddAircraftSeatsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AddAircraftSeatsResponse)
+	err := c.cc.Invoke(ctx, FlightService_AddAircraftSeats_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FlightServiceServer is the server API for FlightService service.
 // All implementations must embed UnimplementedFlightServiceServer
 // for forward compatibility.
@@ -143,6 +179,9 @@ type FlightServiceServer interface {
 	ReserveSeat(context.Context, *ReserveSeatRequest) (*ReserveSeatResponse, error)
 	ReleaseSeat(context.Context, *ReleaseSeatRequest) (*ReleaseSeatResponse, error)
 	ConfirmSeat(context.Context, *ConfirmSeatRequest) (*ConfirmSeatResponse, error)
+	CreateAircraft(context.Context, *CreateAircraftRequest) (*CreateAircraftResponse, error)
+	ListAircrafts(context.Context, *ListAircraftsRequest) (*ListAircraftsResponse, error)
+	AddAircraftSeats(context.Context, *AddAircraftSeatsRequest) (*AddAircraftSeatsResponse, error)
 	mustEmbedUnimplementedFlightServiceServer()
 }
 
@@ -176,6 +215,15 @@ func (UnimplementedFlightServiceServer) ReleaseSeat(context.Context, *ReleaseSea
 }
 func (UnimplementedFlightServiceServer) ConfirmSeat(context.Context, *ConfirmSeatRequest) (*ConfirmSeatResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ConfirmSeat not implemented")
+}
+func (UnimplementedFlightServiceServer) CreateAircraft(context.Context, *CreateAircraftRequest) (*CreateAircraftResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAircraft not implemented")
+}
+func (UnimplementedFlightServiceServer) ListAircrafts(context.Context, *ListAircraftsRequest) (*ListAircraftsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAircrafts not implemented")
+}
+func (UnimplementedFlightServiceServer) AddAircraftSeats(context.Context, *AddAircraftSeatsRequest) (*AddAircraftSeatsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddAircraftSeats not implemented")
 }
 func (UnimplementedFlightServiceServer) mustEmbedUnimplementedFlightServiceServer() {}
 func (UnimplementedFlightServiceServer) testEmbeddedByValue()                       {}
@@ -342,6 +390,60 @@ func _FlightService_ConfirmSeat_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FlightService_CreateAircraft_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAircraftRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FlightServiceServer).CreateAircraft(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FlightService_CreateAircraft_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FlightServiceServer).CreateAircraft(ctx, req.(*CreateAircraftRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FlightService_ListAircrafts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAircraftsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FlightServiceServer).ListAircrafts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FlightService_ListAircrafts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FlightServiceServer).ListAircrafts(ctx, req.(*ListAircraftsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FlightService_AddAircraftSeats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddAircraftSeatsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FlightServiceServer).AddAircraftSeats(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FlightService_AddAircraftSeats_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FlightServiceServer).AddAircraftSeats(ctx, req.(*AddAircraftSeatsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FlightService_ServiceDesc is the grpc.ServiceDesc for FlightService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -380,6 +482,18 @@ var FlightService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ConfirmSeat",
 			Handler:    _FlightService_ConfirmSeat_Handler,
+		},
+		{
+			MethodName: "CreateAircraft",
+			Handler:    _FlightService_CreateAircraft_Handler,
+		},
+		{
+			MethodName: "ListAircrafts",
+			Handler:    _FlightService_ListAircrafts_Handler,
+		},
+		{
+			MethodName: "AddAircraftSeats",
+			Handler:    _FlightService_AddAircraftSeats_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

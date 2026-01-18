@@ -49,7 +49,9 @@ func (s *Server) CreateBooking(ctx context.Context, req *bookingv1.CreateBooking
 		dto.Currency = "RUB"
 	}
 
-	ctx = s.withTimeout(ctx)
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
 	id, err := s.svc.CreateBooking(ctx, dto)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create booking: %v", err)
@@ -63,7 +65,9 @@ func (s *Server) GetBooking(ctx context.Context, req *bookingv1.GetBookingReques
 		return nil, err
 	}
 
-	ctx = s.withTimeout(ctx)
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
 	b, err := s.svc.GetBooking(ctx, strings.TrimSpace(req.BookingId))
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
@@ -80,7 +84,9 @@ func (s *Server) ListBookings(ctx context.Context, req *bookingv1.ListBookingsRe
 		return nil, err
 	}
 
-	ctx = s.withTimeout(ctx)
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
 	list, err := s.svc.ListBookings(ctx, req.UserId)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to list bookings: %v", err)
@@ -99,20 +105,14 @@ func (s *Server) CancelBooking(ctx context.Context, req *bookingv1.CancelBooking
 		return nil, err
 	}
 
-	ctx = s.withTimeout(ctx)
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
 	if err := s.svc.CancelBooking(ctx, req.BookingId); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to cancel booking: %v", err)
 	}
 
 	return &bookingv1.CancelBookingResponse{}, nil
-}
-
-func (s *Server) withTimeout(ctx context.Context) context.Context {
-	if s.timeout <= 0 {
-		return ctx
-	}
-	c, _ := context.WithTimeout(ctx, s.timeout)
-	return c
 }
 
 func mapBookingToProto(b *domain.Booking) *bookingv1.Booking {

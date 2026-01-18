@@ -48,3 +48,17 @@ func (c *Client) ReleaseSeat(ctx context.Context, flightID int64, seatNumber str
 	}
 	return nil
 }
+
+func (c *Client) ConfirmSeat(ctx context.Context, flightID int64, seatNumber string) error {
+	req := &flightv1.ConfirmSeatRequest{
+		FlightId:   flightID,
+		SeatNumber: seatNumber,
+	}
+
+	_, err := c.api.ConfirmSeat(ctx, req)
+	if err != nil {
+		return fmt.Errorf("failed to confirm seat: %w", err)
+	}
+
+	return nil
+}

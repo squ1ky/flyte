@@ -46,7 +46,7 @@ func (r *BookingRepo) GetByID(ctx context.Context, id string) (*domain.Booking, 
 
 	if err := r.db.GetContext(ctx, &booking, query, id); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("booking not found")
+			return nil, fmt.Errorf("booking %s: %w", id, domain.ErrBookingNotFound)
 		}
 		return nil, fmt.Errorf("failed to get booking: %w", err)
 	}
@@ -60,7 +60,7 @@ func (r *BookingRepo) UpdateStatus(ctx context.Context, id string, status domain
 		SET status = $1,
 			updated_at = NOW()
 		WHERE id = $2
-		AND status NOT IN ('PAID', 'CANCELLED', 'FAILED')
+		  AND status NOT IN ('PAID', 'CANCELLED', 'FAILED')
 	`
 
 	result, err := r.db.ExecContext(ctx, query, status, id)
@@ -73,7 +73,7 @@ func (r *BookingRepo) UpdateStatus(ctx context.Context, id string, status domain
 		return fmt.Errorf("failed to check rows affected: %w", err)
 	}
 	if rows == 0 {
-		return fmt.Errorf("booking with id %s not found", id)
+		return fmt.Errorf("booking %s not found or already processed: %w", id, domain.ErrBookingNotFound)
 	}
 
 	return nil
@@ -86,6 +86,10 @@ func (r *BookingRepo) ListByUserID(ctx context.Context, userID int64) ([]domain.
 	err := r.db.SelectContext(ctx, &bookings, query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get bookings: %w", err)
+	}
+
+	if bookings == nil {
+		bookings = []domain.Booking{}
 	}
 
 	return bookings, nil

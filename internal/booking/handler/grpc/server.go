@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"errors"
 	bookingv1 "github.com/squ1ky/flyte/gen/go/booking"
 	"github.com/squ1ky/flyte/internal/booking/domain"
 	"github.com/squ1ky/flyte/internal/booking/service"
@@ -70,7 +71,7 @@ func (s *Server) GetBooking(ctx context.Context, req *bookingv1.GetBookingReques
 
 	b, err := s.svc.GetBooking(ctx, strings.TrimSpace(req.BookingId))
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
+		if errors.Is(err, domain.ErrBookingNotFound) {
 			return nil, status.Error(codes.NotFound, "booking not found")
 		}
 		return nil, status.Errorf(codes.Internal, "failed to get booking: %v", err)

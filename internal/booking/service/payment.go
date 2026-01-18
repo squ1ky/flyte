@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/squ1ky/flyte/internal/booking/clients/grpc/flight"
 	"github.com/squ1ky/flyte/internal/booking/domain"
@@ -33,6 +34,10 @@ func (p *PaymentProcessor) ProcessResult(ctx context.Context, bookingID string, 
 
 	booking, err := p.repo.GetByID(ctx, bookingID)
 	if err != nil {
+		if errors.Is(err, domain.ErrBookingNotFound) {
+			log.Error("booking not found for paymentResult")
+			return nil
+		}
 		return fmt.Errorf("failed to get booking: %w", err)
 	}
 

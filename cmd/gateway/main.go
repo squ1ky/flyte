@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	bookingv1 "github.com/squ1ky/flyte/gen/go/booking"
 	flightv1 "github.com/squ1ky/flyte/gen/go/flight"
@@ -8,13 +9,13 @@ import (
 	"github.com/squ1ky/flyte/internal/gateway/config"
 	"github.com/squ1ky/flyte/internal/gateway/handler"
 	"github.com/squ1ky/flyte/internal/gateway/router"
+	"github.com/squ1ky/flyte/pkg/httpserver"
 	"github.com/squ1ky/flyte/pkg/logger"
+	"github.com/squ1ky/flyte/pkg/shutdown"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log/slog"
 	"os"
-	"os/signal"
-	"syscall"
 )
 
 func main() {
@@ -33,7 +34,7 @@ func main() {
 		log.Error("failed to connect to user service", slog.Any("error", err))
 		os.Exit(1)
 	}
-	defer userConn.Close()
+
 	userClient := userv1.NewUserServiceClient(userConn)
 	log.Info("connected to user service", slog.String("addr", cfg.Clients.UserAddr))
 
@@ -43,7 +44,7 @@ func main() {
 		log.Error("failed to connect to flight service", slog.Any("error", err))
 		os.Exit(1)
 	}
-	defer flightConn.Close()
+
 	flightClient := flightv1.NewFlightServiceClient(flightConn)
 	log.Info("connected to flight service", slog.String("addr", cfg.Clients.FlightAddr))
 
@@ -53,9 +54,21 @@ func main() {
 		log.Error("failed to connect to booking service", slog.Any("error", err))
 		os.Exit(1)
 	}
-	defer bookingConn.Close()
+
 	bookingClient := bookingv1.NewBookingServiceClient(bookingConn)
 	log.Info("connected to booking service", slog.String("addr", cfg.Clients.BookingAddr))
+
+	defer func() {
+		if err := bookingConn.Close(); err != nil {
+			log.Error("error closing booking conn", "error", err)
+		}
+		if err := flightConn.Close(); err != nil {
+			log.Error("error closing flight conn", "error", err)
+		}
+		if err := userConn.Close(); err != nil {
+			log.Error("error closing user conn", "error", err)
+		}
+	}()
 
 	// Handlers
 	userHandler := handler.NewUserHandler(userClient)
@@ -64,23 +77,20 @@ func main() {
 
 	gatewayHandler := handler.NewGatewayHandler(userHandler, flightHandler, bookingHandler)
 
-	r := router.NewRouter(gatewayHandler, userClient)
+	r := router.InitRoutes(gatewayHandler, userClient)
+	srv := httpserver.New(r, cfg.HTTP.Port)
 
 	go func() {
-		addr := fmt.Sprintf(":%d", cfg.HTTP.Port)
-		log.Info("gateway server listening", slog.String("addr", addr))
+		log.Info("gateway server listening", "port", cfg.HTTP.Port)
 
-		if err := r.Run(addr); err != nil {
+		if err := srv.Start(); err != nil {
 			log.Error("failed to run server", slog.Any("error", err))
 			os.Exit(1)
 		}
 	}()
 
-	// Graceful Shutdown
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
+	_, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	sign := <-stop
-	log.Info("shutting down...", slog.String("signal", sign.String()))
-	log.Info("gateway stopped")
+	shutdown.Graceful(log, cancel, srv)
 }

@@ -9,16 +9,15 @@ import (
 	"github.com/squ1ky/flyte/internal/booking/kafka"
 	"github.com/squ1ky/flyte/internal/booking/repository/pgrepo"
 	"github.com/squ1ky/flyte/internal/booking/service"
+	"github.com/squ1ky/flyte/pkg/bootstrap"
 	"github.com/squ1ky/flyte/pkg/db"
 	"github.com/squ1ky/flyte/pkg/logger"
+	"github.com/squ1ky/flyte/pkg/shutdown"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log/slog"
 	"net"
 	"os"
-	"os/signal"
-	"syscall"
-	"time"
 )
 
 const migrationsPath = "migrations/booking"
@@ -33,35 +32,20 @@ func main() {
 	log := logger.SetupLogger(cfg.Env)
 	log.Info("starting booking service", slog.String("env", cfg.Env))
 
-	dsn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
-		cfg.DB.User, cfg.DB.Password, cfg.DB.Host, cfg.DB.Port, cfg.DB.Name, cfg.DB.SSLMode)
-
-	if err := db.RunMigrations(dsn, migrationsPath, log); err != nil {
-		log.Error("failed to run migrations", slog.Any("error", err))
-		os.Exit(1)
-	}
-
-	database, err := db.NewPostgresDB(db.Config{
+	dbCfg := db.Config{
 		Host:     cfg.DB.Host,
 		Port:     cfg.DB.Port,
 		User:     cfg.DB.User,
 		Password: cfg.DB.Password,
 		Name:     cfg.DB.Name,
 		SSLMode:  cfg.DB.SSLMode,
-	})
+	}
+	database, dbClose, err := bootstrap.InitDB(dbCfg, migrationsPath, log)
 	if err != nil {
-		log.Error("failed to connect to db", slog.Any("error", err))
+		log.Error("init db failed", "error", err)
 		os.Exit(1)
 	}
-	defer func() {
-		log.Info("closing database connection")
-		if err := database.Close(); err != nil {
-			log.Error("failed to close database connection", slog.Any("error", err))
-		}
-	}()
-	log.Info("db connection established")
-
-	bookingRepo := pgrepo.NewBookingRepo(database)
+	defer dbClose()
 
 	flightClient, err := flight.NewClient(cfg.FlightService.Address, cfg.GRPC.Timeout)
 	if err != nil {
@@ -75,11 +59,17 @@ func main() {
 		}
 	}()
 
+	bookingRepo := pgrepo.NewBookingRepo(database)
 	bookingService := service.NewBookingService(bookingRepo, producer, flightClient, log)
 	paymentProcessor := service.NewPaymentProcessor(bookingRepo, flightClient, log)
 
 	kafkaHandler := kafka.NewBookingMessageHandler(paymentProcessor, log)
 	consumer := kafka.NewBookingConsumer(cfg.Kafka, kafkaHandler, log)
+	defer func() {
+		if err := consumer.Close(); err != nil {
+			log.Error("failed to close kafka consumer", "error", err)
+		}
+	}()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -92,7 +82,6 @@ func main() {
 	}()
 
 	grpcServerImpl := bookinggrpc.NewServer(bookingService, cfg.GRPC.Timeout)
-
 	grpcServer := grpc.NewServer()
 	grpcServerImpl.Register(grpcServer)
 	reflection.Register(grpcServer)
@@ -111,20 +100,5 @@ func main() {
 		}
 	}()
 
-	// Graceful Shutdown
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
-
-	sign := <-stop
-	log.Info("shutting down...", slog.String("signal", sign.String()))
-
-	grpcServer.GracefulStop()
-	cancel()
-	time.Sleep(1 * time.Second)
-
-	if err := consumer.Close(); err != nil {
-		log.Error("failed to close kafka consumer", "error", err)
-	}
-
-	log.Info("server stopped")
+	shutdown.Graceful(log, cancel, grpcServer)
 }

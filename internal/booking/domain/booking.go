@@ -23,4 +23,14 @@ const (
 	StatusPaid      BookingStatus = "PAID"
 	StatusCancelled BookingStatus = "CANCELLED"
 	StatusFailed    BookingStatus = "FAILED"
+	StatusTimeout   BookingStatus = "TIMEOUT"
 )
+
+func (s BookingStatus) IsTerminal() bool {
+	switch s {
+	case StatusPaid, StatusCancelled, StatusFailed, StatusTimeout:
+		return true
+	default:
+		return false
+	}
+}

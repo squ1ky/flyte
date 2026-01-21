@@ -9,6 +9,7 @@ import (
 	"github.com/squ1ky/flyte/internal/booking/kafka"
 	"github.com/squ1ky/flyte/internal/booking/repository/pgrepo"
 	"github.com/squ1ky/flyte/internal/booking/service"
+	"github.com/squ1ky/flyte/internal/booking/service/worker"
 	"github.com/squ1ky/flyte/pkg/bootstrap"
 	"github.com/squ1ky/flyte/pkg/db"
 	"github.com/squ1ky/flyte/pkg/logger"
@@ -52,7 +53,7 @@ func main() {
 		log.Error("failed to create flight service client", "error", err)
 	}
 
-	producer := kafka.NewProducer(cfg.Kafka, log)
+	producer := kafka.NewPaymentEventProducer(cfg.Kafka, log)
 	defer func() {
 		if err := producer.Close(); err != nil {
 			log.Error("failed to close kafka producer", "error", err)
@@ -61,10 +62,9 @@ func main() {
 
 	bookingRepo := pgrepo.NewBookingRepo(database)
 	bookingService := service.NewBookingService(bookingRepo, producer, flightClient, log)
-	paymentProcessor := service.NewPaymentProcessor(bookingRepo, flightClient, log)
 
-	kafkaHandler := kafka.NewBookingMessageHandler(paymentProcessor, log)
-	consumer := kafka.NewBookingConsumer(cfg.Kafka, kafkaHandler, log)
+	kafkaHandler := kafka.NewPaymentResultHandler(bookingService, log)
+	consumer := kafka.NewPaymentResultConsumer(cfg.Kafka, kafkaHandler, log)
 	defer func() {
 		if err := consumer.Close(); err != nil {
 			log.Error("failed to close kafka consumer", "error", err)
@@ -80,6 +80,11 @@ func main() {
 			log.Error("kafka consumer stopped with error", "error", err)
 		}
 	}()
+
+	outboxProcessor := worker.NewOutboxProcessor(bookingRepo, producer, log, cfg.Outbox.Interval)
+	cleaner := worker.NewExpiredBookingCleaner(bookingRepo, flightClient, log, cfg.Cleaner.Interval, cfg.Cleaner.BookingTTL)
+	go outboxProcessor.Start(ctx)
+	go cleaner.Start(ctx)
 
 	grpcServerImpl := bookinggrpc.NewServer(bookingService, cfg.GRPC.Timeout)
 	grpcServer := grpc.NewServer()

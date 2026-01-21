@@ -17,7 +17,7 @@ func NewBookingHandler(client bookingv1.BookingServiceClient) *BookingHandler {
 }
 
 type createBookingInput struct {
-	FlightId          int64   `json:"flightId" binding:"required,gt=0"`
+	FlightId          int64   `json:"flight_id" binding:"required,gt=0"`
 	SeatNumber        string  `json:"seat_number" binding:"required"`
 	PassengerName     string  `json:"passenger_name" binding:"required"`
 	PassengerPassport string  `json:"passenger_passport" binding:"required"`

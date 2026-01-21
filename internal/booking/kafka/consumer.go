@@ -6,36 +6,22 @@ import (
 	"fmt"
 	"github.com/segmentio/kafka-go"
 	"github.com/squ1ky/flyte/internal/booking/config"
+	"github.com/squ1ky/flyte/internal/booking/domain/events"
 	"log/slog"
 	"time"
 )
 
-type PaymentStatus string
-
-const (
-	PaymentStatusSuccess PaymentStatus = "SUCCESS"
-	PaymentStatusFailed  PaymentStatus = "FAILED"
-)
-
-type PaymentResultDTO struct {
-	BookingID    string        `json:"booking_id"`
-	PaymentID    string        `json:"payment_id"`
-	Status       PaymentStatus `json:"status"`
-	ErrorMessage string        `json:"error_message,omitempty"`
-	ProcessedAt  string        `json:"processed_at"`
-}
-
-type BookingConsumer struct {
+type PaymentResultConsumer struct {
 	reader  *kafka.Reader
 	handler MessageHandler
 	log     *slog.Logger
 }
 
-func NewBookingConsumer(
+func NewPaymentResultConsumer(
 	cfg config.KafkaConfig,
 	handler MessageHandler,
 	log *slog.Logger,
-) *BookingConsumer {
+) *PaymentResultConsumer {
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:  cfg.Brokers,
 		Topic:    cfg.TopicResults,
@@ -44,19 +30,20 @@ func NewBookingConsumer(
 		MaxBytes: 10e6,
 	})
 
-	return &BookingConsumer{
+	return &PaymentResultConsumer{
 		reader:  reader,
 		handler: handler,
 		log:     log,
 	}
 }
 
-func (c *BookingConsumer) Start(ctx context.Context) error {
+func (c *PaymentResultConsumer) Start(ctx context.Context) error {
 	c.log.Info("starting kafka consumer", "topic", c.reader.Config().Topic)
 
 	for {
 		select {
 		case <-ctx.Done():
+			c.log.Info("stopping kafka consumer")
 			return ctx.Err()
 		default:
 		}
@@ -83,8 +70,8 @@ func (c *BookingConsumer) Start(ctx context.Context) error {
 	}
 }
 
-func (c *BookingConsumer) processMessage(ctx context.Context, m kafka.Message) error {
-	var res PaymentResultDTO
+func (c *PaymentResultConsumer) processMessage(ctx context.Context, m kafka.Message) error {
+	var res events.PaymentResultEvent
 	if err := json.Unmarshal(m.Value, &res); err != nil {
 		return fmt.Errorf("failed to unmarshal result: %w", err)
 	}
@@ -97,7 +84,7 @@ func (c *BookingConsumer) processMessage(ctx context.Context, m kafka.Message) e
 	return c.handler.HandlePaymentResult(ctx, res)
 }
 
-func (c *BookingConsumer) Close() error {
+func (c *PaymentResultConsumer) Close() error {
 	if c.reader != nil {
 		return c.reader.Close()
 	}

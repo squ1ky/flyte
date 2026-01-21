@@ -55,7 +55,7 @@ type Flight struct {
 	Status           FlightStatus `db:"status" json:"status"`
 	CreatedAt        time.Time    `db:"created_at" json:"created_at"`
 
-	AvailableSeats int    `db:"-" json:"available_seats"`
+	AvailableSeats int    `db:"available_seats" json:"available_seats"`
 	Seats          []Seat `db:"-" json:"seats,omitempty"`
 }
 

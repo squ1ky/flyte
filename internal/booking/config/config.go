@@ -12,6 +12,8 @@ type Config struct {
 	DB            DBConfig
 	Kafka         KafkaConfig
 	FlightService FlightServiceConfig
+	Cleaner       CleanerConfig
+	Outbox        OutboxConfig
 }
 
 type GRPCConfig struct {
@@ -37,6 +39,15 @@ type KafkaConfig struct {
 
 type FlightServiceConfig struct {
 	Address string `env:"FLIGHT_SERVICE_ADDR" env-required:"true"`
+}
+
+type CleanerConfig struct {
+	Interval   time.Duration `env:"BOOKING_CLEANER_INTERVAL" env-default:"1m"`
+	BookingTTL time.Duration `env:"RESERVATION_TTL" env-required:"true"`
+}
+
+type OutboxConfig struct {
+	Interval time.Duration `env:"BOOKING_OUTBOX_INTERVAL" env-default:"5s"`
 }
 
 func Load() (*Config, error) {

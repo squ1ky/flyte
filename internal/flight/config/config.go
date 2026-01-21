@@ -33,7 +33,7 @@ type ElasticConfig struct {
 }
 
 type CleanerConfig struct {
-	Interval       time.Duration `env:"CLEANER_INTERVAL" env-default:"1m"`
+	Interval       time.Duration `env:"FLIGHT_CLEANER_INTERVAL" env-default:"1m"`
 	ReservationTTL time.Duration `env:"RESERVATION_TTL" env-default:"15m"`
 }
 

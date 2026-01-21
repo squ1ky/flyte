@@ -6,67 +6,49 @@ import (
 	"fmt"
 	"github.com/segmentio/kafka-go"
 	"github.com/squ1ky/flyte/internal/booking/config"
-	"github.com/squ1ky/flyte/internal/booking/domain"
+	"github.com/squ1ky/flyte/internal/booking/domain/events"
 	"log/slog"
 	"time"
 )
 
-type PaymentRequestDTO struct {
-	BookingID   string `json:"booking_id"`
-	UserID      int64  `json:"user_id"`
-	AmountCents int64  `json:"amount_cents"`
-	Currency    string `json:"currency"`
-}
-
-type BookingProducer struct {
+type PaymentEventProducer struct {
 	writer *kafka.Writer
 	log    *slog.Logger
 }
 
-func NewProducer(cfg config.KafkaConfig, log *slog.Logger) *BookingProducer {
+func NewPaymentEventProducer(cfg config.KafkaConfig, log *slog.Logger) *PaymentEventProducer {
 	writer := &kafka.Writer{
 		Addr:     kafka.TCP(cfg.Brokers...),
 		Topic:    cfg.TopicRequests,
 		Balancer: &kafka.LeastBytes{},
 	}
 
-	return &BookingProducer{
+	return &PaymentEventProducer{
 		writer: writer,
 		log:    log,
 	}
 }
 
-func (p *BookingProducer) SendPaymentRequest(ctx context.Context, booking *domain.Booking) error {
-	req := PaymentRequestDTO{
-		BookingID:   booking.ID,
-		UserID:      booking.UserID,
-		AmountCents: booking.PriceCents,
-		Currency:    booking.Currency,
-	}
-
-	reqBytes, err := json.Marshal(req)
+func (p *PaymentEventProducer) SendPaymentRequest(ctx context.Context, event events.PaymentRequestEvent) error {
+	payload, err := json.Marshal(event)
 	if err != nil {
-		return fmt.Errorf("failed to marshal request: %w", err)
+		return fmt.Errorf("failed to marshal payment request event: %w", err)
 	}
 
 	msg := kafka.Message{
-		Key:   []byte(booking.ID),
-		Value: reqBytes,
+		Key:   []byte(event.BookingID),
+		Value: payload,
 		Time:  time.Now(),
 	}
 
 	if err := p.writer.WriteMessages(ctx, msg); err != nil {
-		return fmt.Errorf("failed to write request to kafka: %w", err)
+		return fmt.Errorf("failed to write message to kafka: %w", err)
 	}
-
-	p.log.Info("payment request sent",
-		"booking_id", booking.ID,
-		"amount", booking.PriceCents)
 
 	return nil
 }
 
-func (p *BookingProducer) Close() error {
+func (p *PaymentEventProducer) Close() error {
 	if p.writer != nil {
 		return p.writer.Close()
 	}

@@ -3,6 +3,8 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	userv1 "github.com/squ1ky/flyte/gen/go/user"
+	"github.com/squ1ky/flyte/internal/gateway/common"
+	"github.com/squ1ky/flyte/pkg/api"
 	"net/http"
 	"strings"
 )
@@ -36,8 +38,7 @@ func AuthMiddleware(client userv1.UserServiceClient) gin.HandlerFunc {
 			return
 		}
 
-		c.Set("userId", resp.UserId)
-		c.Set("role", resp.Role)
+		common.SetUser(c, resp.UserId, resp.Role)
 
 		c.Next()
 	}
@@ -45,11 +46,9 @@ func AuthMiddleware(client userv1.UserServiceClient) gin.HandlerFunc {
 
 func AdminOnlyMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		role, exists := c.Get("role")
-		if !exists || role != "admin" {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "forbidden: admins only",
-			})
+		role := common.GetUserRole(c)
+		if role != "admin" {
+			api.AbortForbidden(c)
 			return
 		}
 		c.Next()

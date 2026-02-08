@@ -7,7 +7,6 @@ import (
 	flightv1 "github.com/squ1ky/flyte/gen/go/flight"
 	userv1 "github.com/squ1ky/flyte/gen/go/user"
 	"github.com/squ1ky/flyte/internal/gateway/config"
-	"github.com/squ1ky/flyte/internal/gateway/handler"
 	"github.com/squ1ky/flyte/internal/gateway/router"
 	"github.com/squ1ky/flyte/pkg/httpserver"
 	"github.com/squ1ky/flyte/pkg/logger"
@@ -34,7 +33,6 @@ func main() {
 		log.Error("failed to connect to user service", slog.Any("error", err))
 		os.Exit(1)
 	}
-
 	userClient := userv1.NewUserServiceClient(userConn)
 	log.Info("connected to user service", slog.String("addr", cfg.Clients.UserAddr))
 
@@ -44,7 +42,6 @@ func main() {
 		log.Error("failed to connect to flight service", slog.Any("error", err))
 		os.Exit(1)
 	}
-
 	flightClient := flightv1.NewFlightServiceClient(flightConn)
 	log.Info("connected to flight service", slog.String("addr", cfg.Clients.FlightAddr))
 
@@ -54,7 +51,6 @@ func main() {
 		log.Error("failed to connect to booking service", slog.Any("error", err))
 		os.Exit(1)
 	}
-
 	bookingClient := bookingv1.NewBookingServiceClient(bookingConn)
 	log.Info("connected to booking service", slog.String("addr", cfg.Clients.BookingAddr))
 
@@ -70,14 +66,7 @@ func main() {
 		}
 	}()
 
-	// Handlers
-	userHandler := handler.NewUserHandler(userClient)
-	flightHandler := handler.NewFlightHandler(flightClient)
-	bookingHandler := handler.NewBookingHandler(bookingClient)
-
-	gatewayHandler := handler.NewGatewayHandler(userHandler, flightHandler, bookingHandler)
-
-	r := router.InitRoutes(gatewayHandler, userClient)
+	r := router.InitRoutes(userClient, flightClient, bookingClient)
 	srv := httpserver.New(r, cfg.HTTP.Port)
 
 	go func() {

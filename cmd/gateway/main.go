@@ -66,7 +66,7 @@ func main() {
 		}
 	}()
 
-	r := router.InitRoutes(userClient, flightClient, bookingClient)
+	r := router.InitRoutes(cfg.HTTP, userClient, flightClient, bookingClient)
 	srv := httpserver.New(r, cfg.HTTP.Port)
 
 	go func() {

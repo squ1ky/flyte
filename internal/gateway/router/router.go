@@ -1,21 +1,34 @@
 package router
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	bookingv1 "github.com/squ1ky/flyte/gen/go/booking"
 	flightv1 "github.com/squ1ky/flyte/gen/go/flight"
 	userv1 "github.com/squ1ky/flyte/gen/go/user"
 	"github.com/squ1ky/flyte/internal/gateway/booking"
+	"github.com/squ1ky/flyte/internal/gateway/config"
 	"github.com/squ1ky/flyte/internal/gateway/flight"
 	"github.com/squ1ky/flyte/internal/gateway/user"
+	"time"
 )
 
 func InitRoutes(
+	cfg config.HTTPConfig,
 	userClient userv1.UserServiceClient,
 	flightClient flightv1.FlightServiceClient,
 	bookingClient bookingv1.BookingServiceClient,
 ) *gin.Engine {
 	r := gin.Default()
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{cfg.AllowedOrigin},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	authMiddleware := AuthMiddleware(userClient)
 	adminMiddleware := AdminOnlyMiddleware()

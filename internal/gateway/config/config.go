@@ -12,7 +12,8 @@ type Config struct {
 }
 
 type HTTPConfig struct {
-	Port int `env:"GATEWAY_HTTP_PORT" env-default:"8080"`
+	Port          int    `env:"GATEWAY_HTTP_PORT" env-default:"8080"`
+	AllowedOrigin string `env:"ALLOWED_ORIGIN" env-default:"http://localhost:5173"`
 }
 
 type ClientsConfig struct {

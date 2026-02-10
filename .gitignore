@@ -15,7 +15,6 @@
 .DS_Store
 
 # Frontend
-frontend
 frontend/node_modules
 frontend/logs
 frontend/*.log

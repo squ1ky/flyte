@@ -55,7 +55,8 @@ func (h *Handler) SignIn(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, LoginResponse{
-		Token: resp.Token,
+		UserID: resp.UserId,
+		Token:  resp.Token,
 	})
 }
 

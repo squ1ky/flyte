@@ -6,6 +6,7 @@ export interface User {
 
 export interface AuthResponse {
     token: string;
+    user_id: number;
 }
 
 export interface Passenger {

@@ -4,6 +4,7 @@ import { LoginPage } from "./pages/public/LoginPage";
 import { RegisterPage } from "./pages/public/RegisterPage";
 import { ProfilePage } from "./pages/private/ProfilePage";
 import { ProtectedRoute } from "./features/auth/ProtectedRoute";
+import {BookingPage} from "./pages/private/BookingPage.tsx";
 
 function App() {
     return (
@@ -15,6 +16,8 @@ function App() {
 
                 <Route element={<ProtectedRoute />}>
                     <Route path="/profile" element={<ProfilePage />} />
+                    
+                    <Route path="/flights/:flightId/book" element={<BookingPage />} />
                 </Route>
             </Routes>
         </BrowserRouter>

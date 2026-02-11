@@ -1,28 +1,28 @@
 package flight
 
 type CreateFlightRequest struct {
-	FlightNumber     string `json:"flight_number" binding:"required"`
-	AircraftID       int64  `json:"aircraft_id" binding:"required"`
-	DepartureAirport string `json:"departure_airport" binding:"required,len=3"`
-	ArrivalAirport   string `json:"arrival_airport" binding:"required,len=3"`
-	DepartureTime    string `json:"departure_time" binding:"required"`
-	ArrivalTime      string `json:"arrival_time" binding:"required"`
-	BasePriceCents   int64  `json:"base_price_cents" binding:"required,gt=0"`
+	FlightNumber     string `json:"flight_number"`
+	AircraftID       int64  `json:"aircraft_id"`
+	DepartureAirport string `json:"departure_airport"`
+	ArrivalAirport   string `json:"arrival_airport"`
+	DepartureTime    string `json:"departure_time"`
+	ArrivalTime      string `json:"arrival_time"`
+	BasePriceCents   int64  `json:"base_price_cents"`
 }
 
 type CreateAircraftRequest struct {
-	Model      string `json:"model" binding:"required"`
-	TotalSeats int32  `json:"total_seats" binding:"required,gt=0"`
+	Model      string `json:"model"`
+	TotalSeats int32  `json:"total_seats"`
 }
 
 type SeatTemplateInput struct {
-	SeatNumber      string  `json:"seat_number" binding:"required"`
-	SeatClass       string  `json:"seat_class" binding:"required"`
+	SeatNumber      string  `json:"seat_number"`
+	SeatClass       string  `json:"seat_class"`
 	PriceMultiplier float64 `json:"price_multiplier"`
 }
 
 type AddSeatsRequest struct {
-	Seats []SeatTemplateInput `json:"seats" binding:"required,min=1"`
+	Seats []SeatTemplateInput `json:"seats"`
 }
 
 type FlightResponse struct {

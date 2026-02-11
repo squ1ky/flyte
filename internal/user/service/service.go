@@ -14,7 +14,7 @@ type UserClaims struct {
 
 type Auth interface {
 	Register(ctx context.Context, email, password, phone string) (int64, error)
-	Login(ctx context.Context, email, password string) (string, error)
+	Login(ctx context.Context, email, password string) (userID int64, token string, err error)
 	ValidateToken(ctx context.Context, token string) (*UserClaims, error)
 	GetUser(ctx context.Context, userID int64) (*domain.User, error)
 }

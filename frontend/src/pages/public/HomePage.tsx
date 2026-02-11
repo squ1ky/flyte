@@ -6,8 +6,10 @@ import { SearchForm } from "../../features/flight-search/SearchForm";
 import { FlightCard } from "../../features/flight-search/FlightCard";
 import { flightApi } from "../../api/endpoints/flight";
 import type { SearchFlightParams } from "../../types/flight";
+import {useNavigate} from "react-router-dom";
 
 export const HomePage = () => {
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useState<SearchFlightParams | null>(null);
 
     const { data: flights, isLoading, isError } = useQuery({
@@ -56,7 +58,11 @@ export const HomePage = () => {
                     <div className="space-y-4">
                         {flights.length > 0 ? (
                             flights.map((flight) => (
-                                <FlightCard key={flight.id} flight={flight} />
+                                <FlightCard
+                                    key={flight.id}
+                                    flight={flight}
+                                    onSelect={(id) => navigate(`/flights/${id}/book`)}
+                                />
                             ))
                         ) : (
                             <div className="bg-white p-10 rounded-2xl shadow-lg text-center">

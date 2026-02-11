@@ -45,17 +45,17 @@ func (s *AuthService) Register(ctx context.Context, email, password, phone strin
 	return id, nil
 }
 
-func (s *AuthService) Login(ctx context.Context, email, password string) (string, error) {
+func (s *AuthService) Login(ctx context.Context, email, password string) (userID int64, token string, err error) {
 	user, err := s.userRepo.GetByEmail(ctx, email)
 	if err != nil {
-		return "", fmt.Errorf("invalid credentials")
+		return 0, "", fmt.Errorf("invalid credentials")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-		return "", fmt.Errorf("invalid credentials")
+		return 0, "", fmt.Errorf("invalid credentials")
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &UserClaims{
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, &UserClaims{
 		UserID: user.ID,
 		Role:   user.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -64,12 +64,12 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 		},
 	})
 
-	tokenString, err := token.SignedString([]byte(s.cfg.Secret))
+	tokenString, err := jwtToken.SignedString([]byte(s.cfg.Secret))
 	if err != nil {
-		return "", fmt.Errorf("failed to sign token: %w", err)
+		return 0, "", fmt.Errorf("failed to sign token: %w", err)
 	}
 
-	return tokenString, nil
+	return user.ID, tokenString, nil
 }
 
 func (s *AuthService) ValidateToken(ctx context.Context, token string) (*UserClaims, error) {

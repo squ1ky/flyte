@@ -1,21 +1,17 @@
-export const BookingStatus = {
-    PENDING: 'PENDING',
-    CONFIRMED: 'CONFIRMED',
-    CANCELLED: 'CANCELLED',
-    FAILED: 'FAILED'
-} as const;
-
-export type BookingStatusType = typeof BookingStatus[keyof typeof BookingStatus]
+export interface Seat {
+    id: number;
+    seat_number: string;
+    is_booked: boolean;
+    price_multiplier: number;
+}
 
 export interface Booking {
-    id: string;
+    id: number;
     flight_id: number;
     seat_number: string;
     passenger_name: string;
-    passenger_passport: string;
-    status: BookingStatusType | string;
     price_cents: number;
-    currency: string;
+    status: string;
     created_at: string;
 }
 
@@ -26,8 +22,4 @@ export interface CreateBookingRequest {
     passenger_passport: string;
     price_cents: number;
     currency: string;
-}
-
-export interface CreateBookingResponse {
-    booking_id: string;
 }

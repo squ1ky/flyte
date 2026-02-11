@@ -84,8 +84,8 @@ func ValidatePassenger(info *userv1.Passenger) error {
 		return status.Errorf(codes.InvalidArgument, msgFutureBirthDate)
 	}
 
-	gender := strings.ToUpper(info.GetGender())
-	if gender != "M" && gender != "F" {
+	gender := strings.ToLower(info.GetGender())
+	if gender != "male" && gender != "female" {
 		return status.Errorf(codes.InvalidArgument, msgInvalidGender)
 	}
 

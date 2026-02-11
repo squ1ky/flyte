@@ -54,12 +54,15 @@ func (s *Server) Login(ctx context.Context, req *userv1.LoginRequest) (*userv1.L
 		return nil, err
 	}
 
-	token, err := s.auth.Login(ctx, req.Email, req.Password)
+	userID, token, err := s.auth.Login(ctx, req.Email, req.Password)
 	if err != nil {
 		return nil, status.Error(codes.Unauthenticated, ErrInvalidCredentials)
 	}
 
-	return &userv1.LoginResponse{Token: token}, nil
+	return &userv1.LoginResponse{
+		Token:  token,
+		UserId: userID,
+	}, nil
 }
 
 func (s *Server) ValidateToken(ctx context.Context, req *userv1.ValidateTokenRequest) (*userv1.ValidateTokenResponse, error) {

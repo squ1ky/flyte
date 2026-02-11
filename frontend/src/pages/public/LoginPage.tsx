@@ -22,7 +22,7 @@ export const LoginPage = () => {
         setServerError(null);
         try {
             const response = await authApi.login(data);
-            login(response.token);
+            login(response.token, response.user_id);
             navigate("/profile");
         } catch (error: any) {
             setServerError(error.response?.data?.error || "Неверный email или пароль");

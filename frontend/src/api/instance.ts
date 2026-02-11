@@ -8,3 +8,39 @@ export const api = axios.create({
         'Content-Type': 'application/json',
     },
 });
+
+api.interceptors.request.use(
+    (config) => {
+        try {
+            const storageItem = localStorage.getItem('auth-storage');
+
+            if (storageItem) {
+                const parsed = JSON.parse(storageItem);
+                const token = parsed.state?.token;
+
+                if (token) {
+                    config.headers.Authorization = `Bearer ${token}`;
+                }
+            }
+        } catch (e) {
+            console.error("Error reading token from storage", e);
+        }
+
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('auth-storage');
+
+            if (!window.location.pathname.includes('/login')) {
+                window.location.href = '/login';
+            }
+        }
+        return Promise.reject(error);
+    }
+);

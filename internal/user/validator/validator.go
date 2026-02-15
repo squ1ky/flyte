@@ -32,6 +32,7 @@ const (
 	msgFutureBirthDate       = "birth date cannot be in the future"
 	msgInvalidGender         = "gender must be 'M' or 'F'"
 	msgDocNumberRequired     = "document number is required"
+	msgCitizenshipInvalid    = "citizenship must be a 3-letter ISO code"
 )
 
 var phoneRegex = regexp.MustCompile(`^\+[1-9]\d{1,14}$`)
@@ -64,7 +65,7 @@ func ValidateLogin(req *userv1.LoginRequest) error {
 	return nil
 }
 
-func ValidatePassenger(info *userv1.Passenger) error {
+func ValidatePassengerInfo(info *userv1.PassengerInfo) error {
 	if info == nil {
 		return status.Error(codes.InvalidArgument, msgPassengerInfoRequired)
 	}
@@ -84,13 +85,16 @@ func ValidatePassenger(info *userv1.Passenger) error {
 		return status.Errorf(codes.InvalidArgument, msgFutureBirthDate)
 	}
 
-	gender := strings.ToLower(info.GetGender())
-	if gender != "male" && gender != "female" {
+	if info.GetGender() == userv1.Gender_GENDER_UNSPECIFIED {
 		return status.Errorf(codes.InvalidArgument, msgInvalidGender)
 	}
 
-	if info.GetDocumentNumber() == "" {
+	if strings.TrimSpace(info.GetDocumentNumber()) == "" {
 		return status.Error(codes.InvalidArgument, msgDocNumberRequired)
+	}
+
+	if len(info.GetCitizenship()) != 3 {
+		return status.Errorf(codes.InvalidArgument, msgCitizenshipInvalid)
 	}
 
 	return nil

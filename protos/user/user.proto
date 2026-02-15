@@ -4,15 +4,31 @@ package user;
 
 option go_package = "github.com/squ1ky/flyte/gen/go/user;userv1";
 
+import "google/protobuf/timestamp.proto";
+
 service UserService {
   rpc Register (RegisterRequest) returns (RegisterResponse);
   rpc Login (LoginRequest) returns (LoginResponse);
+
   rpc ValidateToken (ValidateTokenRequest) returns (ValidateTokenResponse);
 
   rpc GetUser (GetUserRequest) returns (GetUserResponse);
 
   rpc AddPassenger (AddPassengerRequest) returns (AddPassengerResponse);
   rpc GetPassengers (GetPassengersRequest) returns (GetPassengersResponse);
+  rpc DeletePassenger (DeletePassengerRequest) returns (DeletePassengerResponse);
+}
+
+enum Role {
+  ROLE_UNSPECIFIED = 0; // Protobuf requires
+  ROLE_USER = 1;
+  ROLE_ADMIN = 2;
+}
+
+enum Gender {
+  GENDER_UNSPECIFIED = 0; // Protobuf requires
+  GENDER_MALE = 1;
+  GENDER_FEMALE = 2;
 }
 
 message RegisterRequest {
@@ -41,7 +57,7 @@ message ValidateTokenRequest {
 
 message ValidateTokenResponse {
   int64 user_id = 1;
-  string role = 2;
+  Role role = 2;
   bool valid = 3;
 }
 
@@ -53,25 +69,37 @@ message GetUserResponse {
   int64 id = 1;
   string email = 2;
   string phone_number = 3;
-  string role = 4;
-  string created_at = 5;
+  Role role = 4;
+  google.protobuf.Timestamp created_at = 5;
 }
 
 message Passenger {
   int64 id = 1;
-  string first_name = 2;
-  string last_name = 3;
-  string middle_name = 4;
-  string birth_date = 5; // YYYY-MM-DD
-  string gender = 6;
-  string document_number = 7;
-  string document_type = 8;
-  string citizenship = 9;
+  int64 user_id = 2;
+  string first_name = 3;
+  string last_name = 4;
+  string middle_name = 5;
+  string birth_date = 6; // YYYY-MM-DD
+  Gender gender = 7;
+  string document_number = 8;
+  string document_type = 9;
+  string citizenship = 10;
+}
+
+message PassengerInfo {
+  string first_name = 1;
+  string last_name = 2;
+  string middle_name = 3;
+  string birth_date = 4;
+  Gender gender = 5;
+  string document_number = 6;
+  string document_type = 7;
+  string citizenship = 8;
 }
 
 message AddPassengerRequest {
   int64 user_id = 1;
-  Passenger info = 2;
+  PassengerInfo info = 2;
 }
 
 message AddPassengerResponse {
@@ -85,3 +113,10 @@ message GetPassengersRequest {
 message GetPassengersResponse {
   repeated Passenger passengers = 1;
 }
+
+message DeletePassengerRequest {
+  int64 user_id = 1;
+  int64 passenger_id = 2;
+}
+
+message DeletePassengerResponse {}

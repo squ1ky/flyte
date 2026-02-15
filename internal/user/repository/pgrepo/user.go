@@ -27,7 +27,6 @@ func (r *UserRepo) Create(ctx context.Context, user *domain.User) (int64, error)
 
 	var id int64
 	if err := r.db.QueryRowContext(ctx, query, user.Email, user.PasswordHash, user.PhoneNumber, user.Role).Scan(&id); err != nil {
-		// unique constraint violation
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
 			return 0, domain.ErrUserAlreadyExists

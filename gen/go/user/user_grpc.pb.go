@@ -19,12 +19,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_Register_FullMethodName      = "/user.UserService/Register"
-	UserService_Login_FullMethodName         = "/user.UserService/Login"
-	UserService_ValidateToken_FullMethodName = "/user.UserService/ValidateToken"
-	UserService_GetUser_FullMethodName       = "/user.UserService/GetUser"
-	UserService_AddPassenger_FullMethodName  = "/user.UserService/AddPassenger"
-	UserService_GetPassengers_FullMethodName = "/user.UserService/GetPassengers"
+	UserService_Register_FullMethodName        = "/user.UserService/Register"
+	UserService_Login_FullMethodName           = "/user.UserService/Login"
+	UserService_ValidateToken_FullMethodName   = "/user.UserService/ValidateToken"
+	UserService_GetUser_FullMethodName         = "/user.UserService/GetUser"
+	UserService_AddPassenger_FullMethodName    = "/user.UserService/AddPassenger"
+	UserService_GetPassengers_FullMethodName   = "/user.UserService/GetPassengers"
+	UserService_DeletePassenger_FullMethodName = "/user.UserService/DeletePassenger"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -37,6 +38,7 @@ type UserServiceClient interface {
 	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
 	AddPassenger(ctx context.Context, in *AddPassengerRequest, opts ...grpc.CallOption) (*AddPassengerResponse, error)
 	GetPassengers(ctx context.Context, in *GetPassengersRequest, opts ...grpc.CallOption) (*GetPassengersResponse, error)
+	DeletePassenger(ctx context.Context, in *DeletePassengerRequest, opts ...grpc.CallOption) (*DeletePassengerResponse, error)
 }
 
 type userServiceClient struct {
@@ -107,6 +109,16 @@ func (c *userServiceClient) GetPassengers(ctx context.Context, in *GetPassengers
 	return out, nil
 }
 
+func (c *userServiceClient) DeletePassenger(ctx context.Context, in *DeletePassengerRequest, opts ...grpc.CallOption) (*DeletePassengerResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeletePassengerResponse)
+	err := c.cc.Invoke(ctx, UserService_DeletePassenger_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -117,6 +129,7 @@ type UserServiceServer interface {
 	GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error)
 	AddPassenger(context.Context, *AddPassengerRequest) (*AddPassengerResponse, error)
 	GetPassengers(context.Context, *GetPassengersRequest) (*GetPassengersResponse, error)
+	DeletePassenger(context.Context, *DeletePassengerRequest) (*DeletePassengerResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -144,6 +157,9 @@ func (UnimplementedUserServiceServer) AddPassenger(context.Context, *AddPassenge
 }
 func (UnimplementedUserServiceServer) GetPassengers(context.Context, *GetPassengersRequest) (*GetPassengersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPassengers not implemented")
+}
+func (UnimplementedUserServiceServer) DeletePassenger(context.Context, *DeletePassengerRequest) (*DeletePassengerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeletePassenger not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -274,6 +290,24 @@ func _UserService_GetPassengers_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_DeletePassenger_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeletePassengerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).DeletePassenger(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_DeletePassenger_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).DeletePassenger(ctx, req.(*DeletePassengerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -304,6 +338,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPassengers",
 			Handler:    _UserService_GetPassengers_Handler,
+		},
+		{
+			MethodName: "DeletePassenger",
+			Handler:    _UserService_DeletePassenger_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

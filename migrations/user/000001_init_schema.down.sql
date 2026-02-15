@@ -1,2 +1,2 @@
-DROP TABLE IF EXISTS passengers;
-DROP TABLE IF EXISTS users;
+DROP TABLE passenger_profiles;
+DROP TABLE users;

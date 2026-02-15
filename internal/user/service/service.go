@@ -22,4 +22,5 @@ type Auth interface {
 type Passenger interface {
 	AddPassenger(ctx context.Context, p *domain.Passenger) (int64, error)
 	GetPassengers(ctx context.Context, userID int64) ([]domain.Passenger, error)
+	DeletePassenger(ctx context.Context, userID, passengerID int64) error
 }

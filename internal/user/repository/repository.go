@@ -14,4 +14,5 @@ type UserRepository interface {
 type PassengerRepository interface {
 	Create(ctx context.Context, passenger *domain.Passenger) (int64, error)
 	GetByUserID(ctx context.Context, userID int64) ([]domain.Passenger, error)
+	Delete(ctx context.Context, userID, passengerID int64) error
 }

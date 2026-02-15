@@ -7,6 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/squ1ky/flyte/internal/user/config"
 	"github.com/squ1ky/flyte/internal/user/domain"
+	"github.com/squ1ky/flyte/internal/user/formatter"
 	"github.com/squ1ky/flyte/internal/user/repository"
 	"golang.org/x/crypto/bcrypt"
 	"time"
@@ -30,16 +31,21 @@ func (s *AuthService) Register(ctx context.Context, email, password, phone strin
 		return 0, fmt.Errorf("failed to generate password hash: %w", err)
 	}
 
+	cleanPhone := formatter.FormatPhoneNumber(phone)
+
 	user := &domain.User{
 		Email:        email,
 		PasswordHash: string(passHash),
-		PhoneNumber:  phone,
-		Role:         "user",
+		PhoneNumber:  cleanPhone,
+		Role:         domain.RoleUser,
 	}
 
 	id, err := s.userRepo.Create(ctx, user)
 	if err != nil {
-		return 0, err
+		if errors.Is(err, domain.ErrUserAlreadyExists) {
+			return 0, domain.ErrUserAlreadyExists
+		}
+		return 0, fmt.Errorf("failed to register user: %w", err)
 	}
 
 	return id, nil
@@ -48,11 +54,11 @@ func (s *AuthService) Register(ctx context.Context, email, password, phone strin
 func (s *AuthService) Login(ctx context.Context, email, password string) (userID int64, token string, err error) {
 	user, err := s.userRepo.GetByEmail(ctx, email)
 	if err != nil {
-		return 0, "", fmt.Errorf("invalid credentials")
+		return 0, "", domain.ErrInvalidCredentials
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-		return 0, "", fmt.Errorf("invalid credentials")
+		return 0, "", domain.ErrInvalidCredentials
 	}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, &UserClaims{

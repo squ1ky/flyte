@@ -9,6 +9,7 @@ package userv1
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -20,6 +21,104 @@ const (
 	// Verify that runtime/protoimpl is sufficiently up-to-date.
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
+
+type Role int32
+
+const (
+	Role_ROLE_UNSPECIFIED Role = 0 // Protobuf requires
+	Role_ROLE_USER        Role = 1
+	Role_ROLE_ADMIN       Role = 2
+)
+
+// Enum value maps for Role.
+var (
+	Role_name = map[int32]string{
+		0: "ROLE_UNSPECIFIED",
+		1: "ROLE_USER",
+		2: "ROLE_ADMIN",
+	}
+	Role_value = map[string]int32{
+		"ROLE_UNSPECIFIED": 0,
+		"ROLE_USER":        1,
+		"ROLE_ADMIN":       2,
+	}
+)
+
+func (x Role) Enum() *Role {
+	p := new(Role)
+	*p = x
+	return p
+}
+
+func (x Role) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Role) Descriptor() protoreflect.EnumDescriptor {
+	return file_user_proto_enumTypes[0].Descriptor()
+}
+
+func (Role) Type() protoreflect.EnumType {
+	return &file_user_proto_enumTypes[0]
+}
+
+func (x Role) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Role.Descriptor instead.
+func (Role) EnumDescriptor() ([]byte, []int) {
+	return file_user_proto_rawDescGZIP(), []int{0}
+}
+
+type Gender int32
+
+const (
+	Gender_GENDER_UNSPECIFIED Gender = 0 // Protobuf requires
+	Gender_GENDER_MALE        Gender = 1
+	Gender_GENDER_FEMALE      Gender = 2
+)
+
+// Enum value maps for Gender.
+var (
+	Gender_name = map[int32]string{
+		0: "GENDER_UNSPECIFIED",
+		1: "GENDER_MALE",
+		2: "GENDER_FEMALE",
+	}
+	Gender_value = map[string]int32{
+		"GENDER_UNSPECIFIED": 0,
+		"GENDER_MALE":        1,
+		"GENDER_FEMALE":      2,
+	}
+)
+
+func (x Gender) Enum() *Gender {
+	p := new(Gender)
+	*p = x
+	return p
+}
+
+func (x Gender) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Gender) Descriptor() protoreflect.EnumDescriptor {
+	return file_user_proto_enumTypes[1].Descriptor()
+}
+
+func (Gender) Type() protoreflect.EnumType {
+	return &file_user_proto_enumTypes[1]
+}
+
+func (x Gender) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Gender.Descriptor instead.
+func (Gender) EnumDescriptor() ([]byte, []int) {
+	return file_user_proto_rawDescGZIP(), []int{1}
+}
 
 type RegisterRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -276,7 +375,7 @@ func (x *ValidateTokenRequest) GetToken() string {
 type ValidateTokenResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Role          string                 `protobuf:"bytes,2,opt,name=role,proto3" json:"role,omitempty"`
+	Role          Role                   `protobuf:"varint,2,opt,name=role,proto3,enum=user.Role" json:"role,omitempty"`
 	Valid         bool                   `protobuf:"varint,3,opt,name=valid,proto3" json:"valid,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -319,11 +418,11 @@ func (x *ValidateTokenResponse) GetUserId() int64 {
 	return 0
 }
 
-func (x *ValidateTokenResponse) GetRole() string {
+func (x *ValidateTokenResponse) GetRole() Role {
 	if x != nil {
 		return x.Role
 	}
-	return ""
+	return Role_ROLE_UNSPECIFIED
 }
 
 func (x *ValidateTokenResponse) GetValid() bool {
@@ -382,8 +481,8 @@ type GetUserResponse struct {
 	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
 	PhoneNumber   string                 `protobuf:"bytes,3,opt,name=phone_number,json=phoneNumber,proto3" json:"phone_number,omitempty"`
-	Role          string                 `protobuf:"bytes,4,opt,name=role,proto3" json:"role,omitempty"`
-	CreatedAt     string                 `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	Role          Role                   `protobuf:"varint,4,opt,name=role,proto3,enum=user.Role" json:"role,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -439,31 +538,32 @@ func (x *GetUserResponse) GetPhoneNumber() string {
 	return ""
 }
 
-func (x *GetUserResponse) GetRole() string {
+func (x *GetUserResponse) GetRole() Role {
 	if x != nil {
 		return x.Role
 	}
-	return ""
+	return Role_ROLE_UNSPECIFIED
 }
 
-func (x *GetUserResponse) GetCreatedAt() string {
+func (x *GetUserResponse) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
 	}
-	return ""
+	return nil
 }
 
 type Passenger struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	Id             int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	FirstName      string                 `protobuf:"bytes,2,opt,name=first_name,json=firstName,proto3" json:"first_name,omitempty"`
-	LastName       string                 `protobuf:"bytes,3,opt,name=last_name,json=lastName,proto3" json:"last_name,omitempty"`
-	MiddleName     string                 `protobuf:"bytes,4,opt,name=middle_name,json=middleName,proto3" json:"middle_name,omitempty"`
-	BirthDate      string                 `protobuf:"bytes,5,opt,name=birth_date,json=birthDate,proto3" json:"birth_date,omitempty"` // YYYY-MM-DD
-	Gender         string                 `protobuf:"bytes,6,opt,name=gender,proto3" json:"gender,omitempty"`
-	DocumentNumber string                 `protobuf:"bytes,7,opt,name=document_number,json=documentNumber,proto3" json:"document_number,omitempty"`
-	DocumentType   string                 `protobuf:"bytes,8,opt,name=document_type,json=documentType,proto3" json:"document_type,omitempty"`
-	Citizenship    string                 `protobuf:"bytes,9,opt,name=citizenship,proto3" json:"citizenship,omitempty"`
+	UserId         int64                  `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	FirstName      string                 `protobuf:"bytes,3,opt,name=first_name,json=firstName,proto3" json:"first_name,omitempty"`
+	LastName       string                 `protobuf:"bytes,4,opt,name=last_name,json=lastName,proto3" json:"last_name,omitempty"`
+	MiddleName     string                 `protobuf:"bytes,5,opt,name=middle_name,json=middleName,proto3" json:"middle_name,omitempty"`
+	BirthDate      string                 `protobuf:"bytes,6,opt,name=birth_date,json=birthDate,proto3" json:"birth_date,omitempty"` // YYYY-MM-DD
+	Gender         Gender                 `protobuf:"varint,7,opt,name=gender,proto3,enum=user.Gender" json:"gender,omitempty"`
+	DocumentNumber string                 `protobuf:"bytes,8,opt,name=document_number,json=documentNumber,proto3" json:"document_number,omitempty"`
+	DocumentType   string                 `protobuf:"bytes,9,opt,name=document_type,json=documentType,proto3" json:"document_type,omitempty"`
+	Citizenship    string                 `protobuf:"bytes,10,opt,name=citizenship,proto3" json:"citizenship,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -505,6 +605,13 @@ func (x *Passenger) GetId() int64 {
 	return 0
 }
 
+func (x *Passenger) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
 func (x *Passenger) GetFirstName() string {
 	if x != nil {
 		return x.FirstName
@@ -533,11 +640,11 @@ func (x *Passenger) GetBirthDate() string {
 	return ""
 }
 
-func (x *Passenger) GetGender() string {
+func (x *Passenger) GetGender() Gender {
 	if x != nil {
 		return x.Gender
 	}
-	return ""
+	return Gender_GENDER_UNSPECIFIED
 }
 
 func (x *Passenger) GetDocumentNumber() string {
@@ -561,17 +668,117 @@ func (x *Passenger) GetCitizenship() string {
 	return ""
 }
 
+type PassengerInfo struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	FirstName      string                 `protobuf:"bytes,1,opt,name=first_name,json=firstName,proto3" json:"first_name,omitempty"`
+	LastName       string                 `protobuf:"bytes,2,opt,name=last_name,json=lastName,proto3" json:"last_name,omitempty"`
+	MiddleName     string                 `protobuf:"bytes,3,opt,name=middle_name,json=middleName,proto3" json:"middle_name,omitempty"`
+	BirthDate      string                 `protobuf:"bytes,4,opt,name=birth_date,json=birthDate,proto3" json:"birth_date,omitempty"`
+	Gender         Gender                 `protobuf:"varint,5,opt,name=gender,proto3,enum=user.Gender" json:"gender,omitempty"`
+	DocumentNumber string                 `protobuf:"bytes,6,opt,name=document_number,json=documentNumber,proto3" json:"document_number,omitempty"`
+	DocumentType   string                 `protobuf:"bytes,7,opt,name=document_type,json=documentType,proto3" json:"document_type,omitempty"`
+	Citizenship    string                 `protobuf:"bytes,8,opt,name=citizenship,proto3" json:"citizenship,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *PassengerInfo) Reset() {
+	*x = PassengerInfo{}
+	mi := &file_user_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PassengerInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PassengerInfo) ProtoMessage() {}
+
+func (x *PassengerInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_user_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PassengerInfo.ProtoReflect.Descriptor instead.
+func (*PassengerInfo) Descriptor() ([]byte, []int) {
+	return file_user_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *PassengerInfo) GetFirstName() string {
+	if x != nil {
+		return x.FirstName
+	}
+	return ""
+}
+
+func (x *PassengerInfo) GetLastName() string {
+	if x != nil {
+		return x.LastName
+	}
+	return ""
+}
+
+func (x *PassengerInfo) GetMiddleName() string {
+	if x != nil {
+		return x.MiddleName
+	}
+	return ""
+}
+
+func (x *PassengerInfo) GetBirthDate() string {
+	if x != nil {
+		return x.BirthDate
+	}
+	return ""
+}
+
+func (x *PassengerInfo) GetGender() Gender {
+	if x != nil {
+		return x.Gender
+	}
+	return Gender_GENDER_UNSPECIFIED
+}
+
+func (x *PassengerInfo) GetDocumentNumber() string {
+	if x != nil {
+		return x.DocumentNumber
+	}
+	return ""
+}
+
+func (x *PassengerInfo) GetDocumentType() string {
+	if x != nil {
+		return x.DocumentType
+	}
+	return ""
+}
+
+func (x *PassengerInfo) GetCitizenship() string {
+	if x != nil {
+		return x.Citizenship
+	}
+	return ""
+}
+
 type AddPassengerRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Info          *Passenger             `protobuf:"bytes,2,opt,name=info,proto3" json:"info,omitempty"`
+	Info          *PassengerInfo         `protobuf:"bytes,2,opt,name=info,proto3" json:"info,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AddPassengerRequest) Reset() {
 	*x = AddPassengerRequest{}
-	mi := &file_user_proto_msgTypes[9]
+	mi := &file_user_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -583,7 +790,7 @@ func (x *AddPassengerRequest) String() string {
 func (*AddPassengerRequest) ProtoMessage() {}
 
 func (x *AddPassengerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_proto_msgTypes[9]
+	mi := &file_user_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -596,7 +803,7 @@ func (x *AddPassengerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddPassengerRequest.ProtoReflect.Descriptor instead.
 func (*AddPassengerRequest) Descriptor() ([]byte, []int) {
-	return file_user_proto_rawDescGZIP(), []int{9}
+	return file_user_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *AddPassengerRequest) GetUserId() int64 {
@@ -606,7 +813,7 @@ func (x *AddPassengerRequest) GetUserId() int64 {
 	return 0
 }
 
-func (x *AddPassengerRequest) GetInfo() *Passenger {
+func (x *AddPassengerRequest) GetInfo() *PassengerInfo {
 	if x != nil {
 		return x.Info
 	}
@@ -622,7 +829,7 @@ type AddPassengerResponse struct {
 
 func (x *AddPassengerResponse) Reset() {
 	*x = AddPassengerResponse{}
-	mi := &file_user_proto_msgTypes[10]
+	mi := &file_user_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -634,7 +841,7 @@ func (x *AddPassengerResponse) String() string {
 func (*AddPassengerResponse) ProtoMessage() {}
 
 func (x *AddPassengerResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_user_proto_msgTypes[10]
+	mi := &file_user_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -647,7 +854,7 @@ func (x *AddPassengerResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddPassengerResponse.ProtoReflect.Descriptor instead.
 func (*AddPassengerResponse) Descriptor() ([]byte, []int) {
-	return file_user_proto_rawDescGZIP(), []int{10}
+	return file_user_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *AddPassengerResponse) GetPassengerId() int64 {
@@ -666,7 +873,7 @@ type GetPassengersRequest struct {
 
 func (x *GetPassengersRequest) Reset() {
 	*x = GetPassengersRequest{}
-	mi := &file_user_proto_msgTypes[11]
+	mi := &file_user_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -678,7 +885,7 @@ func (x *GetPassengersRequest) String() string {
 func (*GetPassengersRequest) ProtoMessage() {}
 
 func (x *GetPassengersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_proto_msgTypes[11]
+	mi := &file_user_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -691,7 +898,7 @@ func (x *GetPassengersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPassengersRequest.ProtoReflect.Descriptor instead.
 func (*GetPassengersRequest) Descriptor() ([]byte, []int) {
-	return file_user_proto_rawDescGZIP(), []int{11}
+	return file_user_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetPassengersRequest) GetUserId() int64 {
@@ -710,7 +917,7 @@ type GetPassengersResponse struct {
 
 func (x *GetPassengersResponse) Reset() {
 	*x = GetPassengersResponse{}
-	mi := &file_user_proto_msgTypes[12]
+	mi := &file_user_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -722,7 +929,7 @@ func (x *GetPassengersResponse) String() string {
 func (*GetPassengersResponse) ProtoMessage() {}
 
 func (x *GetPassengersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_user_proto_msgTypes[12]
+	mi := &file_user_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -735,7 +942,7 @@ func (x *GetPassengersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPassengersResponse.ProtoReflect.Descriptor instead.
 func (*GetPassengersResponse) Descriptor() ([]byte, []int) {
-	return file_user_proto_rawDescGZIP(), []int{12}
+	return file_user_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *GetPassengersResponse) GetPassengers() []*Passenger {
@@ -745,12 +952,100 @@ func (x *GetPassengersResponse) GetPassengers() []*Passenger {
 	return nil
 }
 
+type DeletePassengerRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	PassengerId   int64                  `protobuf:"varint,2,opt,name=passenger_id,json=passengerId,proto3" json:"passenger_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeletePassengerRequest) Reset() {
+	*x = DeletePassengerRequest{}
+	mi := &file_user_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeletePassengerRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeletePassengerRequest) ProtoMessage() {}
+
+func (x *DeletePassengerRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_user_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeletePassengerRequest.ProtoReflect.Descriptor instead.
+func (*DeletePassengerRequest) Descriptor() ([]byte, []int) {
+	return file_user_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *DeletePassengerRequest) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+func (x *DeletePassengerRequest) GetPassengerId() int64 {
+	if x != nil {
+		return x.PassengerId
+	}
+	return 0
+}
+
+type DeletePassengerResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeletePassengerResponse) Reset() {
+	*x = DeletePassengerResponse{}
+	mi := &file_user_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeletePassengerResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeletePassengerResponse) ProtoMessage() {}
+
+func (x *DeletePassengerResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeletePassengerResponse.ProtoReflect.Descriptor instead.
+func (*DeletePassengerResponse) Descriptor() ([]byte, []int) {
+	return file_user_proto_rawDescGZIP(), []int{15}
+}
+
 var File_user_proto protoreflect.FileDescriptor
 
 const file_user_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"user.proto\x12\x04user\"f\n" +
+	"user.proto\x12\x04user\x1a\x1fgoogle/protobuf/timestamp.proto\"f\n" +
 	"\x0fRegisterRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\x12!\n" +
@@ -764,36 +1059,52 @@ const file_user_proto_rawDesc = "" +
 	"\x05token\x18\x01 \x01(\tR\x05token\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x03R\x06userId\",\n" +
 	"\x14ValidateTokenRequest\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token\"Z\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\"f\n" +
 	"\x15ValidateTokenResponse\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x12\n" +
-	"\x04role\x18\x02 \x01(\tR\x04role\x12\x14\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x1e\n" +
+	"\x04role\x18\x02 \x01(\x0e2\n" +
+	".user.RoleR\x04role\x12\x14\n" +
 	"\x05valid\x18\x03 \x01(\bR\x05valid\")\n" +
 	"\x0eGetUserRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\"\x8d\x01\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\"\xb5\x01\n" +
 	"\x0fGetUserResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12!\n" +
-	"\fphone_number\x18\x03 \x01(\tR\vphoneNumber\x12\x12\n" +
-	"\x04role\x18\x04 \x01(\tR\x04role\x12\x1d\n" +
+	"\fphone_number\x18\x03 \x01(\tR\vphoneNumber\x12\x1e\n" +
+	"\x04role\x18\x04 \x01(\x0e2\n" +
+	".user.RoleR\x04role\x129\n" +
 	"\n" +
-	"created_at\x18\x05 \x01(\tR\tcreatedAt\"\x9f\x02\n" +
+	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\xc6\x02\n" +
 	"\tPassenger\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1d\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x1d\n" +
 	"\n" +
-	"first_name\x18\x02 \x01(\tR\tfirstName\x12\x1b\n" +
-	"\tlast_name\x18\x03 \x01(\tR\blastName\x12\x1f\n" +
-	"\vmiddle_name\x18\x04 \x01(\tR\n" +
+	"first_name\x18\x03 \x01(\tR\tfirstName\x12\x1b\n" +
+	"\tlast_name\x18\x04 \x01(\tR\blastName\x12\x1f\n" +
+	"\vmiddle_name\x18\x05 \x01(\tR\n" +
 	"middleName\x12\x1d\n" +
 	"\n" +
-	"birth_date\x18\x05 \x01(\tR\tbirthDate\x12\x16\n" +
-	"\x06gender\x18\x06 \x01(\tR\x06gender\x12'\n" +
-	"\x0fdocument_number\x18\a \x01(\tR\x0edocumentNumber\x12#\n" +
-	"\rdocument_type\x18\b \x01(\tR\fdocumentType\x12 \n" +
-	"\vcitizenship\x18\t \x01(\tR\vcitizenship\"S\n" +
+	"birth_date\x18\x06 \x01(\tR\tbirthDate\x12$\n" +
+	"\x06gender\x18\a \x01(\x0e2\f.user.GenderR\x06gender\x12'\n" +
+	"\x0fdocument_number\x18\b \x01(\tR\x0edocumentNumber\x12#\n" +
+	"\rdocument_type\x18\t \x01(\tR\fdocumentType\x12 \n" +
+	"\vcitizenship\x18\n" +
+	" \x01(\tR\vcitizenship\"\xa1\x02\n" +
+	"\rPassengerInfo\x12\x1d\n" +
+	"\n" +
+	"first_name\x18\x01 \x01(\tR\tfirstName\x12\x1b\n" +
+	"\tlast_name\x18\x02 \x01(\tR\blastName\x12\x1f\n" +
+	"\vmiddle_name\x18\x03 \x01(\tR\n" +
+	"middleName\x12\x1d\n" +
+	"\n" +
+	"birth_date\x18\x04 \x01(\tR\tbirthDate\x12$\n" +
+	"\x06gender\x18\x05 \x01(\x0e2\f.user.GenderR\x06gender\x12'\n" +
+	"\x0fdocument_number\x18\x06 \x01(\tR\x0edocumentNumber\x12#\n" +
+	"\rdocument_type\x18\a \x01(\tR\fdocumentType\x12 \n" +
+	"\vcitizenship\x18\b \x01(\tR\vcitizenship\"W\n" +
 	"\x13AddPassengerRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12#\n" +
-	"\x04info\x18\x02 \x01(\v2\x0f.user.PassengerR\x04info\"9\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12'\n" +
+	"\x04info\x18\x02 \x01(\v2\x13.user.PassengerInfoR\x04info\"9\n" +
 	"\x14AddPassengerResponse\x12!\n" +
 	"\fpassenger_id\x18\x01 \x01(\x03R\vpassengerId\"/\n" +
 	"\x14GetPassengersRequest\x12\x17\n" +
@@ -801,14 +1112,28 @@ const file_user_proto_rawDesc = "" +
 	"\x15GetPassengersResponse\x12/\n" +
 	"\n" +
 	"passengers\x18\x01 \x03(\v2\x0f.user.PassengerR\n" +
-	"passengers2\x8d\x03\n" +
+	"passengers\"T\n" +
+	"\x16DeletePassengerRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12!\n" +
+	"\fpassenger_id\x18\x02 \x01(\x03R\vpassengerId\"\x19\n" +
+	"\x17DeletePassengerResponse*;\n" +
+	"\x04Role\x12\x14\n" +
+	"\x10ROLE_UNSPECIFIED\x10\x00\x12\r\n" +
+	"\tROLE_USER\x10\x01\x12\x0e\n" +
+	"\n" +
+	"ROLE_ADMIN\x10\x02*D\n" +
+	"\x06Gender\x12\x16\n" +
+	"\x12GENDER_UNSPECIFIED\x10\x00\x12\x0f\n" +
+	"\vGENDER_MALE\x10\x01\x12\x11\n" +
+	"\rGENDER_FEMALE\x10\x022\xdd\x03\n" +
 	"\vUserService\x129\n" +
 	"\bRegister\x12\x15.user.RegisterRequest\x1a\x16.user.RegisterResponse\x120\n" +
 	"\x05Login\x12\x12.user.LoginRequest\x1a\x13.user.LoginResponse\x12H\n" +
 	"\rValidateToken\x12\x1a.user.ValidateTokenRequest\x1a\x1b.user.ValidateTokenResponse\x126\n" +
 	"\aGetUser\x12\x14.user.GetUserRequest\x1a\x15.user.GetUserResponse\x12E\n" +
 	"\fAddPassenger\x12\x19.user.AddPassengerRequest\x1a\x1a.user.AddPassengerResponse\x12H\n" +
-	"\rGetPassengers\x12\x1a.user.GetPassengersRequest\x1a\x1b.user.GetPassengersResponseB,Z*github.com/squ1ky/flyte/gen/go/user;userv1b\x06proto3"
+	"\rGetPassengers\x12\x1a.user.GetPassengersRequest\x1a\x1b.user.GetPassengersResponse\x12N\n" +
+	"\x0fDeletePassenger\x12\x1c.user.DeletePassengerRequest\x1a\x1d.user.DeletePassengerResponseB,Z*github.com/squ1ky/flyte/gen/go/user;userv1b\x06proto3"
 
 var (
 	file_user_proto_rawDescOnce sync.Once
@@ -822,42 +1147,56 @@ func file_user_proto_rawDescGZIP() []byte {
 	return file_user_proto_rawDescData
 }
 
-var file_user_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_user_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_user_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_user_proto_goTypes = []any{
-	(*RegisterRequest)(nil),       // 0: user.RegisterRequest
-	(*RegisterResponse)(nil),      // 1: user.RegisterResponse
-	(*LoginRequest)(nil),          // 2: user.LoginRequest
-	(*LoginResponse)(nil),         // 3: user.LoginResponse
-	(*ValidateTokenRequest)(nil),  // 4: user.ValidateTokenRequest
-	(*ValidateTokenResponse)(nil), // 5: user.ValidateTokenResponse
-	(*GetUserRequest)(nil),        // 6: user.GetUserRequest
-	(*GetUserResponse)(nil),       // 7: user.GetUserResponse
-	(*Passenger)(nil),             // 8: user.Passenger
-	(*AddPassengerRequest)(nil),   // 9: user.AddPassengerRequest
-	(*AddPassengerResponse)(nil),  // 10: user.AddPassengerResponse
-	(*GetPassengersRequest)(nil),  // 11: user.GetPassengersRequest
-	(*GetPassengersResponse)(nil), // 12: user.GetPassengersResponse
+	(Role)(0),                       // 0: user.Role
+	(Gender)(0),                     // 1: user.Gender
+	(*RegisterRequest)(nil),         // 2: user.RegisterRequest
+	(*RegisterResponse)(nil),        // 3: user.RegisterResponse
+	(*LoginRequest)(nil),            // 4: user.LoginRequest
+	(*LoginResponse)(nil),           // 5: user.LoginResponse
+	(*ValidateTokenRequest)(nil),    // 6: user.ValidateTokenRequest
+	(*ValidateTokenResponse)(nil),   // 7: user.ValidateTokenResponse
+	(*GetUserRequest)(nil),          // 8: user.GetUserRequest
+	(*GetUserResponse)(nil),         // 9: user.GetUserResponse
+	(*Passenger)(nil),               // 10: user.Passenger
+	(*PassengerInfo)(nil),           // 11: user.PassengerInfo
+	(*AddPassengerRequest)(nil),     // 12: user.AddPassengerRequest
+	(*AddPassengerResponse)(nil),    // 13: user.AddPassengerResponse
+	(*GetPassengersRequest)(nil),    // 14: user.GetPassengersRequest
+	(*GetPassengersResponse)(nil),   // 15: user.GetPassengersResponse
+	(*DeletePassengerRequest)(nil),  // 16: user.DeletePassengerRequest
+	(*DeletePassengerResponse)(nil), // 17: user.DeletePassengerResponse
+	(*timestamppb.Timestamp)(nil),   // 18: google.protobuf.Timestamp
 }
 var file_user_proto_depIdxs = []int32{
-	8,  // 0: user.AddPassengerRequest.info:type_name -> user.Passenger
-	8,  // 1: user.GetPassengersResponse.passengers:type_name -> user.Passenger
-	0,  // 2: user.UserService.Register:input_type -> user.RegisterRequest
-	2,  // 3: user.UserService.Login:input_type -> user.LoginRequest
-	4,  // 4: user.UserService.ValidateToken:input_type -> user.ValidateTokenRequest
-	6,  // 5: user.UserService.GetUser:input_type -> user.GetUserRequest
-	9,  // 6: user.UserService.AddPassenger:input_type -> user.AddPassengerRequest
-	11, // 7: user.UserService.GetPassengers:input_type -> user.GetPassengersRequest
-	1,  // 8: user.UserService.Register:output_type -> user.RegisterResponse
-	3,  // 9: user.UserService.Login:output_type -> user.LoginResponse
-	5,  // 10: user.UserService.ValidateToken:output_type -> user.ValidateTokenResponse
-	7,  // 11: user.UserService.GetUser:output_type -> user.GetUserResponse
-	10, // 12: user.UserService.AddPassenger:output_type -> user.AddPassengerResponse
-	12, // 13: user.UserService.GetPassengers:output_type -> user.GetPassengersResponse
-	8,  // [8:14] is the sub-list for method output_type
-	2,  // [2:8] is the sub-list for method input_type
-	2,  // [2:2] is the sub-list for extension type_name
-	2,  // [2:2] is the sub-list for extension extendee
-	0,  // [0:2] is the sub-list for field type_name
+	0,  // 0: user.ValidateTokenResponse.role:type_name -> user.Role
+	0,  // 1: user.GetUserResponse.role:type_name -> user.Role
+	18, // 2: user.GetUserResponse.created_at:type_name -> google.protobuf.Timestamp
+	1,  // 3: user.Passenger.gender:type_name -> user.Gender
+	1,  // 4: user.PassengerInfo.gender:type_name -> user.Gender
+	11, // 5: user.AddPassengerRequest.info:type_name -> user.PassengerInfo
+	10, // 6: user.GetPassengersResponse.passengers:type_name -> user.Passenger
+	2,  // 7: user.UserService.Register:input_type -> user.RegisterRequest
+	4,  // 8: user.UserService.Login:input_type -> user.LoginRequest
+	6,  // 9: user.UserService.ValidateToken:input_type -> user.ValidateTokenRequest
+	8,  // 10: user.UserService.GetUser:input_type -> user.GetUserRequest
+	12, // 11: user.UserService.AddPassenger:input_type -> user.AddPassengerRequest
+	14, // 12: user.UserService.GetPassengers:input_type -> user.GetPassengersRequest
+	16, // 13: user.UserService.DeletePassenger:input_type -> user.DeletePassengerRequest
+	3,  // 14: user.UserService.Register:output_type -> user.RegisterResponse
+	5,  // 15: user.UserService.Login:output_type -> user.LoginResponse
+	7,  // 16: user.UserService.ValidateToken:output_type -> user.ValidateTokenResponse
+	9,  // 17: user.UserService.GetUser:output_type -> user.GetUserResponse
+	13, // 18: user.UserService.AddPassenger:output_type -> user.AddPassengerResponse
+	15, // 19: user.UserService.GetPassengers:output_type -> user.GetPassengersResponse
+	17, // 20: user.UserService.DeletePassenger:output_type -> user.DeletePassengerResponse
+	14, // [14:21] is the sub-list for method output_type
+	7,  // [7:14] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_user_proto_init() }
@@ -870,13 +1209,14 @@ func file_user_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_proto_rawDesc), len(file_user_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   13,
+			NumEnums:      2,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_user_proto_goTypes,
 		DependencyIndexes: file_user_proto_depIdxs,
+		EnumInfos:         file_user_proto_enumTypes,
 		MessageInfos:      file_user_proto_msgTypes,
 	}.Build()
 	File_user_proto = out.File

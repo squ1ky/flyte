@@ -2,6 +2,14 @@ package domain
 
 import "time"
 
+const (
+	RoleUser  = "user"
+	RoleAdmin = "admin"
+
+	GenderMale   = "male"
+	GenderFemale = "female"
+)
+
 type User struct {
 	ID           int64     `db:"id"`
 	Email        string    `db:"email"`
@@ -9,6 +17,7 @@ type User struct {
 	PhoneNumber  string    `db:"phone_number"`
 	Role         string    `db:"role"`
 	CreatedAt    time.Time `db:"created_at"`
+	UpdatedAt    time.Time `db:"updated_at"`
 }
 
 type Passenger struct {

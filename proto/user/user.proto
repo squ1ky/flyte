@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package user;
 
-option go_package = "github.com/squ1ky/flyte/gen/go/user;userv1";
+option go_package = "github.com/squ1ky/flyte/gen/proto/user;userv1";
 
 import "google/protobuf/timestamp.proto";
 

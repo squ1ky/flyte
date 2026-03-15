@@ -7,10 +7,11 @@ import (
 )
 
 type Config struct {
-	Env  string `env:"ENV" env-default:"local"`
-	GRPC GRPCConfig
-	DB   DBConfig
-	JWT  JWTConfig
+	Env      string `env:"ENV" env-default:"local"`
+	LogLevel string `env:"USER_LOG_LEVEL" env-default:"info"`
+	GRPC     GRPCConfig
+	DB       DBConfig
+	JWT      JWTConfig
 }
 
 type GRPCConfig struct {

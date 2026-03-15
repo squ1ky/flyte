@@ -17,11 +17,13 @@ type Config struct {
 	SSLMode  string
 }
 
-func NewPostgresDB(cfg Config) (*sqlx.DB, error) {
-	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name, cfg.SSLMode)
+func (c Config) DSN() string {
+	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
+		c.User, c.Password, c.Host, c.Port, c.Name, c.SSLMode)
+}
 
-	db, err := sqlx.Connect("pgx", dsn)
+func NewPostgresDB(cfg Config) (*sqlx.DB, error) {
+	db, err := sqlx.Connect("pgx", cfg.DSN())
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}

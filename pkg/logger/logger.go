@@ -3,17 +3,23 @@ package logger
 import (
 	"log/slog"
 	"os"
+	"strings"
 )
 
-func SetupLogger(env string) *slog.Logger {
-	var handler slog.Handler
-
-	switch env {
-	case "local":
-		handler = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
+func SetupLogger(level string) *slog.Logger {
+	var lvl slog.Level
+	switch strings.ToLower(level) {
+	case "debug":
+		lvl = slog.LevelDebug
+	case "warn":
+		lvl = slog.LevelWarn
+	case "error":
+		lvl = slog.LevelError
 	default:
-		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
+		lvl = slog.LevelInfo
 	}
 
-	return slog.New(handler)
+	return slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: lvl,
+	}))
 }

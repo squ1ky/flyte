@@ -1,0 +1,272 @@
+syntax = "proto3";
+
+package flight;
+
+option go_package = "github.com/squ1ky/flyte/gen/proto/flight;flightv1";
+
+import "google/protobuf/timestamp.proto";
+
+service FlightService {
+  // Search
+  rpc SearchFlights (SearchFlightsRequest) returns (SearchFlightsResponse);
+  rpc SearchAirports (SearchAirportsRequest) returns (SearchAirportsResponse);
+
+  // Flight
+  rpc GetFlightDetails (GetFlightDetailsRequest) returns (GetFlightDetailsResponse);
+  rpc GetFlightFares (GetFlightFaresRequest) returns (GetFlightFaresResponse);
+  rpc UpdateFlightStatus (UpdateFlightStatusRequest) returns (UpdateFlightStatusResponse);
+
+  // Aircraft
+  rpc GetAircraftSeats (GetAircraftSeatsRequest) returns (GetAircraftSeatsResponse);
+
+  // Dictionaries
+  rpc GetAirline (GetAirlineRequest) returns (GetAirlineResponse);
+  rpc ListAirlines (ListAirlinesRequest) returns (ListAirlinesResponse);
+  rpc GetAirport (GetAirportRequest) returns (GetAirportResponse);
+
+  // Booking Flow
+  rpc ReserveSeats (ReserveSeatsRequest) returns (ReserveSeatsResponse);
+  rpc ConfirmReservation (ConfirmReservationRequest) returns (ConfirmReservationResponse);
+  rpc CancelReservation (CancelReservationRequest) returns (CancelReservationResponse);
+  rpc GetReservedSeats (GetReservedSeatsRequest) returns (GetReservedSeatsResponse);
+
+  // Admin
+  rpc CreateFlight (CreateFlightRequest) returns (CreateFlightResponse);
+  rpc CreateAirline (CreateAirlineRequest) returns (CreateAirlineResponse);
+  rpc CreateAircraft (CreateAircraftRequest) returns (CreateAircraftResponse);
+  rpc AddAircraftSeats (AddAircraftSeatsRequest) returns (AddAircraftSeatsResponse);
+}
+
+enum SeatClass {
+  SEAT_CLASS_UNSPECIFIED = 0;
+  SEAT_CLASS_ECONOMY = 1;
+  SEAT_CLASS_BUSINESS = 2;
+  SEAT_CLASS_FIRST = 3;
+}
+
+enum FlightStatus {
+  FLIGHT_STATUS_UNSPECIFIED = 0;
+  FLIGHT_STATUS_SCHEDULED = 1;
+  FLIGHT_STATUS_DEPARTED = 2;
+  FLIGHT_STATUS_ARRIVED = 3;
+  FLIGHT_STATUS_CANCELLED = 4;
+}
+
+message Airport {
+  string code = 1;
+  string name = 2;
+  string city = 3;
+  string country = 4;
+  string timezone = 5;
+}
+
+message Airline {
+  int64 id = 1;
+  string iata_code = 2;
+  string name = 3;
+  string country = 4;
+  string logo_url = 5;
+}
+
+message Aircraft {
+  int64 id = 1;
+  string model = 2;
+  int32 total_seats = 3;
+}
+
+message Flight {
+  int64 id = 1;
+  string flight_number = 2;
+  Airline airline = 3;
+  Aircraft aircraft = 4;
+  Airport departure_airport = 5;
+  Airport arrival_airport = 6;
+  google.protobuf.Timestamp departure_time = 7;
+  google.protobuf.Timestamp arrival_time = 8;
+  FlightStatus status = 9;
+  int64 min_price_cents = 10;
+  int32 available_seats = 11;
+  string currency = 12;
+}
+
+message Seat {
+  int64 id = 1;
+  string seat_number = 2;
+  SeatClass seat_class = 3;
+  int32 row = 4;
+  int32 col = 5;
+  bool is_available = 6;
+  int64 price_cents = 7;
+}
+
+message SeatTemplate {
+  string seat_number = 1;
+  SeatClass seat_class = 2;
+  int32 row = 3;
+  int32 col = 4;
+}
+
+message FareRule {
+  SeatClass seat_class = 1;
+  int64 price_cents = 2;
+}
+
+message SeatReservation {
+  int64 flight_id = 1;
+  string seat_number = 2;
+  string booking_id = 3;
+  google.protobuf.Timestamp expires_at = 4;
+}
+
+message SearchFlightsRequest {
+  string from_airport_code = 1;
+  string to_airport_code = 2;
+  google.protobuf.Timestamp departure_date = 3;
+  int32 passenger_count = 4;
+  SeatClass seat_class = 5;
+}
+
+message SearchFlightsResponse {
+  repeated Flight flights = 1;
+}
+
+message SearchAirportsRequest {
+  string query = 1;
+}
+
+message SearchAirportsResponse {
+  repeated Airport airports = 1;
+}
+
+message GetFlightDetailsRequest {
+  int64 flight_id = 1;
+}
+
+message GetFlightDetailsResponse {
+  Flight flight = 1;
+}
+
+message GetFlightFaresRequest {
+  int64 flight_id = 1;
+}
+
+message GetFlightFaresResponse {
+  repeated FareRule fares = 1;
+}
+
+message UpdateFlightStatusRequest {
+  int64 flight_id = 1;
+  FlightStatus status = 2;
+}
+
+message UpdateFlightStatusResponse {}
+
+message GetAircraftSeatsRequest {
+  int64 aircraft_id = 1;
+}
+
+message GetAircraftSeatsResponse {
+  repeated SeatTemplate seats = 1;
+}
+
+message GetAirlineRequest {
+  int64 airline_id = 1;
+}
+
+message GetAirlineResponse {
+  Airline airline = 1;
+}
+
+message ListAirlinesRequest {
+  int32 limit = 1;
+  int32 offset = 2;
+}
+
+message ListAirlinesResponse {
+  repeated Airline airlines = 1;
+}
+
+message GetAirportRequest {
+  string code = 1;
+}
+
+message GetAirportResponse {
+  Airport airport = 1;
+}
+
+message ReserveSeatsRequest {
+  int64 flight_id = 1;
+  repeated string seat_numbers = 2;
+  string booking_id = 3;
+}
+
+message ReserveSeatsResponse {
+  repeated string unavailable_seats = 1;
+  google.protobuf.Timestamp expires_at = 2;
+}
+
+message ConfirmReservationRequest {
+  int64 flight_id = 1;
+  repeated string seat_numbers = 2;
+  string booking_id = 3;
+}
+
+message ConfirmReservationResponse {}
+
+message CancelReservationRequest {
+  string booking_id = 1;
+}
+
+message CancelReservationResponse {}
+
+message GetReservedSeatsRequest {
+  int64 flight_id = 1;
+}
+
+message GetReservedSeatsResponse {
+  repeated SeatReservation seats = 1;
+}
+
+message CreateFlightRequest {
+  string flight_number = 1;
+  int64 aircraft_id = 2;
+  int64 airline_id = 3;
+  string departure_airport_code = 4;
+  string arrival_airport_code = 5;
+  google.protobuf.Timestamp departure_time = 6;
+  google.protobuf.Timestamp arrival_time = 7;
+  repeated FareRule fare_rules = 8;
+}
+
+message CreateFlightResponse {
+  int64 flight_id = 1;
+}
+
+message CreateAirlineRequest {
+  string iata_code = 1;
+  string name = 2;
+  string country = 3;
+  string logo_url = 4;
+}
+
+message CreateAirlineResponse {
+  int64 airline_id = 1;
+}
+
+message CreateAircraftRequest {
+  string model = 1;
+  int32 total_seats = 2;
+}
+
+message CreateAircraftResponse {
+  int32 aircraft_id = 1;
+}
+
+message AddAircraftSeatsRequest {
+  int64 aircraft_id = 1;
+  repeated SeatTemplate seats = 2;
+}
+
+message AddAircraftSeatsResponse {
+  int32 seats_added = 1;
+}

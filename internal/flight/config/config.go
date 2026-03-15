@@ -7,11 +7,17 @@ import (
 )
 
 type Config struct {
-	Env     string `env:"ENV" env-default:"local"`
-	GRPC    GRPCConfig
-	DB      DBConfig
-	Elastic ElasticConfig
-	Cleaner CleanerConfig
+	Env      string `env:"ENV" env-default:"local"`
+	LogLevel string `env:"FLIGHT_LOG_LEVEL" env-default:"info"`
+	App      AppConfig
+	GRPC     GRPCConfig
+	DB       DBConfig
+	Elastic  ElasticConfig
+	Workers  WorkersConfig
+}
+
+type AppConfig struct {
+	ReservationTTL time.Duration `env:"RESERVATION_TTL" env-default:"15m"`
 }
 
 type GRPCConfig struct {
@@ -32,9 +38,11 @@ type ElasticConfig struct {
 	URL string `env:"ELASTIC_URL" env-default:"http://localhost:9200"`
 }
 
-type CleanerConfig struct {
-	Interval       time.Duration `env:"FLIGHT_CLEANER_INTERVAL" env-default:"1m"`
-	ReservationTTL time.Duration `env:"RESERVATION_TTL" env-default:"15m"`
+type WorkersConfig struct {
+	SeatLockCleanupInterval    time.Duration `env:"WORKER_SEAT_LOCK_CLEANUP_INTERVAL" env-default:"1m"`
+	OutboxPublishInterval      time.Duration `env:"WORKER_FLIGHT_OUTBOX_PUBLISH_INTERVAL" env-default:"500ms"`
+	OutboxBatchSize            int           `env:"WORKER_FLIGHT_OUTBOX_BATCH_SIZE" env-default:"50"`
+	FlightStatusUpdateInterval time.Duration `env:"WORKER_FLIGHT_STATUS_UPDATE_INTERVAL" env-default:"1m"`
 }
 
 func Load() (*Config, error) {

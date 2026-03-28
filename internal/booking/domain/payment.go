@@ -1,4 +1,4 @@
-package events
+package domain
 
 type PaymentStatus string
 

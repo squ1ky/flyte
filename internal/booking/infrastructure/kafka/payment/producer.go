@@ -1,4 +1,4 @@
-package kafka
+package paymentmq
 
 import (
 	"context"
@@ -6,33 +6,33 @@ import (
 	"fmt"
 	"github.com/segmentio/kafka-go"
 	"github.com/squ1ky/flyte/internal/booking/config"
-	"github.com/squ1ky/flyte/internal/booking/domain/events"
+	"github.com/squ1ky/flyte/internal/booking/domain"
 	"log/slog"
 	"time"
 )
 
-type PaymentEventProducer struct {
+type Producer struct {
 	writer *kafka.Writer
 	log    *slog.Logger
 }
 
-func NewPaymentEventProducer(cfg config.KafkaConfig, log *slog.Logger) *PaymentEventProducer {
+func NewProducer(cfg config.KafkaConfig, log *slog.Logger) *Producer {
 	writer := &kafka.Writer{
 		Addr:     kafka.TCP(cfg.Brokers...),
 		Topic:    cfg.TopicRequests,
 		Balancer: &kafka.LeastBytes{},
 	}
 
-	return &PaymentEventProducer{
+	return &Producer{
 		writer: writer,
 		log:    log,
 	}
 }
 
-func (p *PaymentEventProducer) SendPaymentRequest(ctx context.Context, event events.PaymentRequestEvent) error {
+func (p *Producer) SendPaymentRequest(ctx context.Context, event domain.PaymentRequestEvent) error {
 	payload, err := json.Marshal(event)
 	if err != nil {
-		return fmt.Errorf("failed to marshal payment request event: %w", err)
+		return fmt.Errorf("marshal payment request: %w", err)
 	}
 
 	msg := kafka.Message{
@@ -42,15 +42,17 @@ func (p *PaymentEventProducer) SendPaymentRequest(ctx context.Context, event eve
 	}
 
 	if err := p.writer.WriteMessages(ctx, msg); err != nil {
-		return fmt.Errorf("failed to write message to kafka: %w", err)
+		return fmt.Errorf("write to kafka: %w", err)
 	}
+
+	p.log.InfoContext(ctx, "payment request sent",
+		slog.String("booking_id", event.BookingID),
+		slog.Int64("amount_cents", event.AmountCents),
+	)
 
 	return nil
 }
 
-func (p *PaymentEventProducer) Close() error {
-	if p.writer != nil {
-		return p.writer.Close()
-	}
-	return nil
+func (p *Producer) Close() error {
+	return p.writer.Close()
 }

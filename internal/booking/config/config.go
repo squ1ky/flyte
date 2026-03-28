@@ -8,6 +8,7 @@ import (
 
 type Config struct {
 	Env           string `env:"ENV" env-default:"local"`
+	LogLevel      string `env:"BOOKING_LOG_LEVEL" env-default:"info"`
 	GRPC          GRPCConfig
 	DB            DBConfig
 	Kafka         KafkaConfig

@@ -2,35 +2,29 @@ package domain
 
 import "time"
 
-type Booking struct {
-	ID                string        `db:"id"`
-	UserID            int64         `db:"user_id"`
-	FlightID          int64         `db:"flight_id"`
-	SeatNumber        string        `db:"seat_number"`
-	PassengerName     string        `db:"passenger_name"`
-	PassengerPassport string        `db:"passenger_passport"`
-	PriceCents        int64         `db:"price_cents"`
-	Currency          string        `db:"currency"`
-	Status            BookingStatus `db:"status"`
-	CreatedAt         time.Time     `db:"created_at"`
-	UpdatedAt         time.Time     `db:"updated_at"`
-}
-
 type BookingStatus string
 
 const (
-	StatusPending   BookingStatus = "PENDING"
-	StatusPaid      BookingStatus = "PAID"
-	StatusCancelled BookingStatus = "CANCELLED"
-	StatusFailed    BookingStatus = "FAILED"
-	StatusTimeout   BookingStatus = "TIMEOUT"
+	BookingStatusPending   BookingStatus = "PENDING"
+	BookingStatusPaid      BookingStatus = "PAID"
+	BookingStatusCancelled BookingStatus = "CANCELLED"
 )
 
+type Booking struct {
+	ID              string        `db:"id"`
+	UserID          int64         `db:"user_id"`
+	FlightID        int64         `db:"flight_id"`
+	RefCode         string        `db:"ref_code"`
+	Status          BookingStatus `db:"status"`
+	TotalPriceCents int64         `db:"total_price_cents"`
+	Currency        string        `db:"currency"`
+	ContactEmail    string        `db:"contact_email"`
+	ExpiresAt       time.Time     `db:"expires_at"`
+	CreatedAt       time.Time     `db:"created_at"`
+
+	Tickets []Ticket `db:"-"`
+}
+
 func (s BookingStatus) IsTerminal() bool {
-	switch s {
-	case StatusPaid, StatusCancelled, StatusFailed, StatusTimeout:
-		return true
-	default:
-		return false
-	}
+	return s == BookingStatusPaid || s == BookingStatusCancelled
 }

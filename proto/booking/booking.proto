@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package booking;
 
-option go_package = "github.com/squ1ky/flyte/gen/go/booking;bookingv1";
+option go_package = "github.com/squ1ky/flyte/gen/proto/booking;bookingv1";
 
 import "google/protobuf/timestamp.proto";
 
@@ -13,41 +13,77 @@ service BookingService {
   rpc CancelBooking (CancelBookingRequest) returns (CancelBookingResponse);
 }
 
+enum BookingStatus {
+  BOOKING_STATUS_UNSPECIFIED = 0;
+  BOOKING_STATUS_PENDING = 1;
+  BOOKING_STATUS_PAID = 2;
+  BOOKING_STATUS_CANCELLED = 3;
+}
+
+enum TicketStatus {
+  TICKET_STATUS_UNSPECIFIED = 0;
+  TICKET_STATUS_RESERVED = 1;
+  TICKET_STATUS_ISSUED = 2;
+}
+
+enum SeatClass {
+  SEAT_CLASS_UNSPECIFIED = 0;
+  SEAT_CLASS_ECONOMY = 1;
+  SEAT_CLASS_BUSINESS = 2;
+  SEAT_CLASS_FIRST = 3;
+}
+
+message Passenger {
+  string first_name = 1;
+  string last_name = 2;
+  string document_number = 3;
+  string seat_number = 4;
+  SeatClass seat_class = 5;
+}
+
+message Ticket {
+  string id = 1;
+  string passenger_first_name = 2;
+  string passenger_last_name = 3;
+  string passenger_doc_num = 4;
+  string seat_number = 5;
+  SeatClass seat_class = 6;
+  int64 price_cents = 7;
+  string ticket_number = 8;
+  TicketStatus status = 9;
+}
+
 message Booking {
   string id = 1;
   int64 user_id = 2;
   int64 flight_id = 3;
-  string seat_number = 4;
-
-  string passenger_name = 5;
-  string passenger_passport = 6;
-
-  string status = 7;
-  int64 price_cents = 8;
-  string currency = 9;
-
-  google.protobuf.Timestamp created_at = 10;
-  google.protobuf.Timestamp updated_at = 11;
+  string ref_code = 4;
+  BookingStatus status = 5;
+  int64 total_price_cents = 6;
+  string currency = 7;
+  string contact_email = 8;
+  repeated Ticket tickets = 9;
+  google.protobuf.Timestamp expires_at = 10;
+  google.protobuf.Timestamp created_at = 11;
 }
 
 message CreateBookingRequest {
   int64 user_id = 1;
   int64 flight_id = 2;
-  string seat_number = 3;
-
-  string passenger_name = 4;
-  string passenger_passport = 5;
-
-  int64 price_cents = 6;
-  string currency = 7;
+  string contact_email = 3;
+  repeated Passenger passengers = 4;
 }
 
 message CreateBookingResponse {
   string booking_id = 1;
+  string ref_code = 2;
+  google.protobuf.Timestamp expires_at = 3;
 }
 
 message GetBookingRequest {
+  // Lookup by either id or ref_code
   string booking_id = 1;
+  string ref_code = 2;
 }
 
 message GetBookingResponse {
@@ -56,6 +92,8 @@ message GetBookingResponse {
 
 message ListBookingsRequest {
   int64 user_id = 1;
+  int32 limit = 2;
+  int32 offset = 3;
 }
 
 message ListBookingsResponse {
@@ -66,6 +104,4 @@ message CancelBookingRequest {
   string booking_id = 1 ;
 }
 
-message CancelBookingResponse {
-
-}
+message CancelBookingResponse {}

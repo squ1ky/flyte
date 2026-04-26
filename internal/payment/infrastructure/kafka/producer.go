@@ -1,4 +1,4 @@
-package kafka
+package paymentmq
 
 import (
 	"context"
@@ -19,59 +19,66 @@ type PaymentResultDTO struct {
 	ProcessedAt  time.Time `json:"processed_at"`
 }
 
-type PaymentProducer struct {
+type Producer struct {
 	writer *kafka.Writer
 	log    *slog.Logger
 }
 
-func NewPaymentProducer(cfg config.KafkaConfig, log *slog.Logger) *PaymentProducer {
+func NewProducer(cfg config.KafkaConfig, log *slog.Logger) *Producer {
 	writer := &kafka.Writer{
 		Addr:     kafka.TCP(cfg.Brokers...),
 		Topic:    cfg.TopicResults,
 		Balancer: &kafka.LeastBytes{},
 	}
 
-	return &PaymentProducer{
+	return &Producer{
 		writer: writer,
 		log:    log,
 	}
 }
 
-func (p *PaymentProducer) SendPaymentResult(ctx context.Context, payment *domain.Payment) error {
+func (p *Producer) SendPaymentResult(ctx context.Context, payment *domain.Payment) error {
 	resp := PaymentResultDTO{
-		BookingID:   payment.BookingID,
-		PaymentID:   payment.ID,
-		Status:      string(payment.Status),
-		ProcessedAt: time.Now(),
+		BookingID: payment.BookingID,
+		PaymentID: payment.ID,
+		Status:    string(payment.Status),
 	}
 
 	if payment.ErrorMessage != nil {
 		resp.ErrorMessage = *payment.ErrorMessage
 	}
 
-	respBytes, err := json.Marshal(resp)
+	if payment.ProcessedAt != nil {
+		resp.ProcessedAt = *payment.ProcessedAt
+	} else {
+		resp.ProcessedAt = time.Now()
+	}
+
+	payload, err := json.Marshal(resp)
 	if err != nil {
-		return fmt.Errorf("failed to marshal response: %w", err)
+		return fmt.Errorf("marshal payment result: %w", err)
 	}
 
 	msg := kafka.Message{
 		Key:   []byte(payment.BookingID),
-		Value: respBytes,
+		Value: payload,
+		Time:  time.Now(),
 	}
 
 	if err := p.writer.WriteMessages(ctx, msg); err != nil {
 		return fmt.Errorf("failed to write response to kafka: %w", err)
 	}
 
-	p.log.Info("payment result send",
-		"booking_id", payment.BookingID,
-		"payment_id", payment.ID,
-		"status", resp.Status)
+	p.log.InfoContext(ctx, "payment result sent",
+		slog.String("booking_id", payment.BookingID),
+		slog.String("payment_id", payment.ID),
+		slog.String("status", resp.Status),
+	)
 
 	return nil
 }
 
-func (p *PaymentProducer) Close() error {
+func (p *Producer) Close() error {
 	if p.writer != nil {
 		return p.writer.Close()
 	}

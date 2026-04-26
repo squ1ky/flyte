@@ -11,7 +11,9 @@ func RegisterRoutes(rg *gin.RouterGroup, h *Handler, authMiddleware gin.HandlerF
 
 	users := rg.Group("/users", authMiddleware)
 	{
+		users.GET("/:id", h.GetUser)
 		users.POST("/:id/passengers", h.AddPassenger)
 		users.GET("/:id/passengers", h.GetPassengers)
+		users.DELETE("/:id/passengers/:passengerId", h.DeletePassenger)
 	}
 }

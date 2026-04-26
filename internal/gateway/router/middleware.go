@@ -2,28 +2,29 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	userv1 "github.com/squ1ky/flyte/gen/go/user"
+	userv1 "github.com/squ1ky/flyte/gen/proto/user"
 	"github.com/squ1ky/flyte/internal/gateway/common"
-	"github.com/squ1ky/flyte/pkg/api"
-	"net/http"
 	"strings"
 )
 
+const (
+	headerAuthorization = "Authorization"
+	prefixBearer        = "Bearer"
+)
+
+// AuthMiddleware validates the Bearer token via the UserService
+// and stores the authenticated user's ID and role in the request context.
 func AuthMiddleware(client userv1.UserServiceClient) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
+		authHeader := c.GetHeader(headerAuthorization)
 		if authHeader == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "empty auth header",
-			})
+			common.AbortUnauthorized(c)
 			return
 		}
 
 		headerParts := strings.Split(authHeader, " ")
-		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "invalid auth header",
-			})
+		if len(headerParts) != 2 || headerParts[0] != prefixBearer {
+			common.AbortUnauthorized(c)
 			return
 		}
 
@@ -32,23 +33,23 @@ func AuthMiddleware(client userv1.UserServiceClient) gin.HandlerFunc {
 		})
 
 		if err != nil || !resp.Valid {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "invalid token",
-			})
+			common.AbortUnauthorized(c)
 			return
 		}
 
-		common.SetUser(c, resp.UserId, resp.Role)
+		common.SetUser(c, resp.UserId, common.RoleFromProto(resp.Role))
 
 		c.Next()
 	}
 }
 
+// AdminOnlyMiddleware restricts access with the admin role.
+// Must be applied after AuthMiddleware.
 func AdminOnlyMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role := common.GetUserRole(c)
-		if role != "admin" {
-			api.AbortForbidden(c)
+		if role != common.RoleAdmin {
+			common.AbortForbidden(c)
 			return
 		}
 		c.Next()

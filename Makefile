@@ -84,3 +84,7 @@ gen-booking:
 migrate-booking:
 	$(MKDIR_BOOKING_MIGRATIONS)
 	migrate create -ext sql -dir $(MIGRATIONS_BOOKING_PATH) -seq $(name)
+
+# make gen-swagger
+gen-swagger:
+	swag init -g cmd/gateway/doc.go -o api --outputTypes yaml

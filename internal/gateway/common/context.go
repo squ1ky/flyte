@@ -1,11 +1,16 @@
 package common
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/squ1ky/flyte/pkg/api"
+	"net/http"
+	"strconv"
 )
 
 const (
+	RoleUser  = "user"
+	RoleAdmin = "admin"
+
 	ctxKeyUserID = "userId"
 	ctxKeyRole   = "role"
 )
@@ -18,13 +23,13 @@ func SetUser(c *gin.Context, id int64, role string) {
 func GetUserID(c *gin.Context) (int64, bool) {
 	idVal, exists := c.Get(ctxKeyUserID)
 	if !exists {
-		api.AbortUnauthorized(c)
+		AbortUnauthorized(c)
 		return 0, false
 	}
 
 	id, ok := idVal.(int64)
 	if !ok {
-		api.AbortInternal(c, nil)
+		AbortInternal(c, nil)
 		return 0, false
 	}
 
@@ -42,4 +47,32 @@ func GetUserRole(c *gin.Context) string {
 		return ""
 	}
 	return role
+}
+
+func ParseID(c *gin.Context, paramName string) (int64, bool) {
+	idStr := c.Param(paramName)
+	if idStr == "" {
+		AbortWithError(c, http.StatusBadRequest, fmt.Sprintf("missing %s parameter", paramName))
+		return 0, false
+	}
+
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		AbortWithError(c, http.StatusBadRequest, fmt.Sprintf("invalid %s parameter", paramName))
+		return 0, false
+	}
+
+	return id, true
+}
+
+func QueryInt(c *gin.Context, name string, defaultVal int) int {
+	s := c.Query(name)
+	if s == "" {
+		return defaultVal
+	}
+	val, err := strconv.Atoi(s)
+	if err != nil {
+		return defaultVal
+	}
+	return val
 }

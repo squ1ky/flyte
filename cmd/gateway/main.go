@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	bookingv1 "github.com/squ1ky/flyte/gen/go/booking"
-	flightv1 "github.com/squ1ky/flyte/gen/go/flight"
-	userv1 "github.com/squ1ky/flyte/gen/go/user"
+	bookingv1 "github.com/squ1ky/flyte/gen/proto/booking"
+	flightv1 "github.com/squ1ky/flyte/gen/proto/flight"
+	userv1 "github.com/squ1ky/flyte/gen/proto/user"
 	"github.com/squ1ky/flyte/internal/gateway/config"
 	"github.com/squ1ky/flyte/internal/gateway/router"
 	"github.com/squ1ky/flyte/pkg/httpserver"

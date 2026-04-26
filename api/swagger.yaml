@@ -1,0 +1,1561 @@
+basePath: /api/v1
+definitions:
+  booking.BookingResponse:
+    properties:
+      contact_email:
+        description: Contact email
+        example: user@example.com
+        type: string
+      created_at:
+        description: Creation timestamp in RFC 3339
+        example: "2025-07-15T10:00:00Z"
+        type: string
+      currency:
+        description: Currency code
+        example: RUB
+        type: string
+      expires_at:
+        description: Reservation expiry time in RFC 3339 (for pending bookings)
+        example: "2025-07-15T10:15:00Z"
+        type: string
+      flight_id:
+        description: Flight ID
+        example: 1
+        type: integer
+      id:
+        description: Booking UUID
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      ref_code:
+        description: Short reference code
+        example: A1B2C3
+        type: string
+      status:
+        description: Booking status
+        enum:
+        - pending
+        - paid
+        - cancelled
+        example: pending
+        type: string
+      tickets:
+        description: Tickets
+        items:
+          $ref: '#/definitions/booking.TicketResponse'
+        type: array
+      total_price_cents:
+        description: Total price in cents
+        example: 1000000
+        type: integer
+      user_id:
+        description: Owner user ID
+        example: 1
+        type: integer
+    type: object
+  booking.CreateBookingRequest:
+    properties:
+      contact_email:
+        description: Contact email for booking notifications
+        example: user@example.com
+        type: string
+      flight_id:
+        description: Flight ID
+        example: 1
+        type: integer
+      passengers:
+        description: List of passengers
+        items:
+          $ref: '#/definitions/booking.PassengerInput'
+        minItems: 1
+        type: array
+    required:
+    - contact_email
+    - flight_id
+    - passengers
+    type: object
+  booking.CreateBookingResponse:
+    properties:
+      booking_id:
+        description: Booking UUID
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      expires_at:
+        description: Reservation expiry time in RFC 3339
+        example: "2025-07-15T10:15:00Z"
+        type: string
+      ref_code:
+        description: Short reference code for the passenger
+        example: A1B2C3
+        type: string
+    type: object
+  booking.PassengerInput:
+    properties:
+      document_number:
+        description: Travel document number
+        example: "7712345678"
+        type: string
+      first_name:
+        description: Legal first name as in travel document
+        example: Ivan
+        type: string
+      last_name:
+        description: Legal last name as in travel document
+        example: Ivanov
+        type: string
+      seat_class:
+        description: 'Seat class: economy, business, first'
+        enum:
+        - economy
+        - business
+        - first
+        example: economy
+        type: string
+      seat_number:
+        description: Selected seat number
+        example: 12A
+        type: string
+    required:
+    - document_number
+    - first_name
+    - last_name
+    - seat_class
+    - seat_number
+    type: object
+  booking.TicketResponse:
+    properties:
+      id:
+        description: Ticket UUID
+        example: 660e8400-e29b-41d4-a716-446655440000
+        type: string
+      passenger_doc_num:
+        description: Passenger document number
+        example: "7712345678"
+        type: string
+      passenger_first_name:
+        description: Passenger first name
+        example: Ivan
+        type: string
+      passenger_last_name:
+        description: Passenger last name
+        example: Ivanov
+        type: string
+      price_cents:
+        description: Ticket price in cents
+        example: 500000
+        type: integer
+      seat_class:
+        description: Seat class
+        enum:
+        - economy
+        - business
+        - first
+        example: economy
+        type: string
+      seat_number:
+        description: Seat number
+        example: 12A
+        type: string
+      status:
+        description: Ticket status
+        enum:
+        - reserved
+        - issued
+        example: reserved
+        type: string
+      ticket_number:
+        description: Ticket number (assigned after issuance)
+        example: SU1234567890
+        type: string
+    type: object
+  common.ErrorResponse:
+    description: Standard error response
+    properties:
+      message:
+        description: Human-readable error message
+        example: 'invalid input body: field email is required'
+        type: string
+    type: object
+  flight.AddAircraftSeatsRequest:
+    properties:
+      seats:
+        description: List of seat definitions
+        items:
+          $ref: '#/definitions/flight.SeatTemplateInput'
+        minItems: 1
+        type: array
+    required:
+    - seats
+    type: object
+  flight.AddAircraftSeatsResponse:
+    properties:
+      seats_added:
+        description: Number of seats added
+        example: 189
+        type: integer
+    type: object
+  flight.AircraftResponse:
+    properties:
+      id:
+        description: Aircraft ID
+        example: 1
+        type: integer
+      model:
+        description: Aircraft model
+        example: Boeing 737-800
+        type: string
+      total_seats:
+        description: Total number of seats
+        example: 189
+        type: integer
+    type: object
+  flight.AirlineResponse:
+    properties:
+      country:
+        description: Country
+        example: Russia
+        type: string
+      iata_code:
+        description: IATA two-letter code
+        example: SU
+        type: string
+      id:
+        description: Airline ID
+        example: 1
+        type: integer
+      logo_url:
+        description: Logo URL
+        example: https://example.com/logo.png
+        type: string
+      name:
+        description: Airline name
+        example: Aeroflot
+        type: string
+    type: object
+  flight.AirportResponse:
+    properties:
+      city:
+        description: City
+        example: Moscow
+        type: string
+      code:
+        description: IATA airport code
+        example: DME
+        type: string
+      country:
+        description: Country
+        example: Russia
+        type: string
+      name:
+        description: Airport name
+        example: Moscow Domodedovo Airport
+        type: string
+      timezone:
+        description: IANA timezone
+        example: Europe/Moscow
+        type: string
+    type: object
+  flight.CreateAircraftRequest:
+    properties:
+      model:
+        description: Aircraft model name
+        example: Boeing 737-800
+        type: string
+      total_seats:
+        description: Total number of seats
+        example: 189
+        minimum: 1
+        type: integer
+    required:
+    - model
+    - total_seats
+    type: object
+  flight.CreateAirlineRequest:
+    properties:
+      country:
+        description: Country of registration
+        example: Russia
+        type: string
+      iata_code:
+        description: IATA two-letter airline code
+        example: SU
+        type: string
+      logo_url:
+        description: Logo URL (optional)
+        example: https://example.com/logo.png
+        type: string
+      name:
+        description: Airline name
+        example: Aeroflot
+        type: string
+    required:
+    - country
+    - iata_code
+    - name
+    type: object
+  flight.CreateFlightRequest:
+    properties:
+      aircraft_id:
+        description: Aircraft ID
+        example: 1
+        type: integer
+      airline_id:
+        description: Airline ID
+        example: 1
+        type: integer
+      arrival_airport_code:
+        description: Arrival airport IATA code
+        example: LED
+        type: string
+      arrival_time:
+        description: Arrival time in RFC 3339 format
+        example: "2025-07-15T11:30:00Z"
+        type: string
+      departure_airport_code:
+        description: Departure airport IATA code
+        example: DME
+        type: string
+      departure_time:
+        description: Departure time in RFC 3339 format
+        example: "2025-07-15T10:00:00Z"
+        type: string
+      fare_rules:
+        description: Fare rules per seat class
+        items:
+          $ref: '#/definitions/flight.FareRuleInput'
+        minItems: 1
+        type: array
+      flight_number:
+        description: Flight number (e.g. "SU1234")
+        example: SU1234
+        type: string
+    required:
+    - aircraft_id
+    - airline_id
+    - arrival_airport_code
+    - arrival_time
+    - departure_airport_code
+    - departure_time
+    - fare_rules
+    - flight_number
+    type: object
+  flight.FareRuleInput:
+    properties:
+      price_cents:
+        description: Price in cents
+        example: 500000
+        minimum: 0
+        type: integer
+      seat_class:
+        description: 'Seat class: economy, business, first'
+        enum:
+        - economy
+        - business
+        - first
+        example: economy
+        type: string
+    required:
+    - price_cents
+    - seat_class
+    type: object
+  flight.FareRuleResponse:
+    properties:
+      price_cents:
+        description: Price in cents
+        example: 500000
+        type: integer
+      seat_class:
+        description: Seat class
+        enum:
+        - economy
+        - business
+        - first
+        example: economy
+        type: string
+    type: object
+  flight.FlightResponse:
+    properties:
+      aircraft:
+        allOf:
+        - $ref: '#/definitions/flight.AircraftResponse'
+        description: Aircraft info
+      airline:
+        allOf:
+        - $ref: '#/definitions/flight.AirlineResponse'
+        description: Airline info
+      arrival_airport:
+        allOf:
+        - $ref: '#/definitions/flight.AirportResponse'
+        description: Arrival airport
+      arrival_time:
+        description: Arrival time in RFC 3339
+        example: "2025-07-15T11:30:00Z"
+        type: string
+      available_seats:
+        description: Number of available seats
+        example: 45
+        type: integer
+      currency:
+        description: Currency code
+        example: RUB
+        type: string
+      departure_airport:
+        allOf:
+        - $ref: '#/definitions/flight.AirportResponse'
+        description: Departure airport
+      departure_time:
+        description: Departure time in RFC 3339
+        example: "2025-07-15T10:00:00Z"
+        type: string
+      flight_number:
+        description: Flight number
+        example: SU1234
+        type: string
+      id:
+        description: Flight ID
+        example: 1
+        type: integer
+      min_price_cents:
+        description: Minimum price in cents across all fare classes
+        example: 500000
+        type: integer
+      status:
+        description: Flight status
+        enum:
+        - scheduled
+        - departed
+        - arrived
+        - cancelled
+        example: scheduled
+        type: string
+    type: object
+  flight.IDResponse:
+    properties:
+      id:
+        description: Created entity ID
+        example: 1
+        type: integer
+    type: object
+  flight.SeatReservationResponse:
+    properties:
+      booking_id:
+        description: Booking ID
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      expires_at:
+        description: Reservation expiry time
+        example: "2025-07-15T10:15:00Z"
+        type: string
+      flight_id:
+        description: Flight ID
+        example: 1
+        type: integer
+      seat_number:
+        description: Seat number
+        example: 12A
+        type: string
+    type: object
+  flight.SeatTemplateInput:
+    properties:
+      col:
+        description: Column number
+        example: 1
+        minimum: 1
+        type: integer
+      row:
+        description: Row number
+        example: 12
+        minimum: 1
+        type: integer
+      seat_class:
+        description: 'Seat class: economy, business, first'
+        enum:
+        - economy
+        - business
+        - first
+        example: economy
+        type: string
+      seat_number:
+        description: Seat number (e.g. "12A")
+        example: 12A
+        type: string
+    required:
+    - col
+    - row
+    - seat_class
+    - seat_number
+    type: object
+  flight.SeatTemplateResponse:
+    properties:
+      col:
+        description: Column number
+        example: 1
+        type: integer
+      row:
+        description: Row number
+        example: 12
+        type: integer
+      seat_class:
+        description: Seat class
+        enum:
+        - economy
+        - business
+        - first
+        example: economy
+        type: string
+      seat_number:
+        description: Seat number
+        example: 12A
+        type: string
+    type: object
+  flight.UpdateFlightStatusRequest:
+    properties:
+      status:
+        description: 'New status: scheduled, departed, arrived, cancelled'
+        enum:
+        - scheduled
+        - departed
+        - arrived
+        - cancelled
+        example: departed
+        type: string
+    required:
+    - status
+    type: object
+  user.AddPassengerResponse:
+    properties:
+      passenger_id:
+        description: Unique identifier of the created passenger
+        example: 10
+        type: integer
+    type: object
+  user.LoginRequest:
+    properties:
+      email:
+        description: Email address of the user
+        example: user@example.com
+        type: string
+      password:
+        description: Account password
+        example: securepass123
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  user.LoginResponse:
+    properties:
+      token:
+        description: JWT access token
+        example: eyJhbGciOiJIUzI1NiIs...
+        type: string
+      user_id:
+        description: Unique identifier of the authenticated user
+        example: 1
+        type: integer
+    type: object
+  user.PassengerInput:
+    properties:
+      birth_date:
+        description: Date of birth in YYYY-MM-DD format
+        example: "1990-05-20"
+        type: string
+      citizenship:
+        description: Country of citizenship (ISO 3166-1 alpha-3)
+        example: RUS
+        type: string
+      document_number:
+        description: Travel document number
+        example: "7712345678"
+        type: string
+      document_type:
+        description: Travel document type
+        example: passport
+        type: string
+      first_name:
+        description: Legal first name as in travel document
+        example: Ivan
+        type: string
+      gender:
+        description: 'Gender: male or female'
+        enum:
+        - male
+        - female
+        example: male
+        type: string
+      last_name:
+        description: Legal last name as in travel document
+        example: Ivanov
+        type: string
+      middle_name:
+        description: Middle name (patronymic), optional
+        example: Petrovich
+        type: string
+    required:
+    - birth_date
+    - citizenship
+    - document_number
+    - document_type
+    - first_name
+    - gender
+    - last_name
+    type: object
+  user.PassengerResponse:
+    properties:
+      birth_date:
+        description: Date of birth in YYYY-MM-DD format
+        example: "1990-05-20"
+        type: string
+      citizenship:
+        description: Country of citizenship (ISO 3166-1 alpha-3)
+        example: RUS
+        type: string
+      document_number:
+        description: Travel document number
+        example: "7712345678"
+        type: string
+      document_type:
+        description: Travel document type
+        example: passport
+        type: string
+      first_name:
+        description: Legal first name
+        example: Ivan
+        type: string
+      gender:
+        description: 'Gender: male, female'
+        enum:
+        - male
+        - female
+        example: male
+        type: string
+      id:
+        description: Unique passenger identifier
+        example: 10
+        type: integer
+      last_name:
+        description: Legal last name
+        example: Ivanov
+        type: string
+      middle_name:
+        description: Middle name (patronymic)
+        example: Petrovich
+        type: string
+      user_id:
+        description: Owner user identifier
+        example: 1
+        type: integer
+    type: object
+  user.RegisterRequest:
+    properties:
+      email:
+        description: Email address of the new user
+        example: user@example.com
+        type: string
+      password:
+        description: Password must be at least 8 characters
+        example: securepass123
+        minLength: 8
+        type: string
+      phone_number:
+        description: Phone number in international format
+        example: "+79991234567"
+        type: string
+    required:
+    - email
+    - password
+    - phone_number
+    type: object
+  user.RegisterResponse:
+    properties:
+      user_id:
+        description: Unique identifier of the created user
+        example: 1
+        type: integer
+    type: object
+  user.UserResponse:
+    properties:
+      created_at:
+        description: Account creation timestamp in RFC 3339 format
+        example: "2025-01-15T10:30:00Z"
+        type: string
+      email:
+        description: Email address
+        example: user@example.com
+        type: string
+      id:
+        description: Unique user identifier
+        example: 1
+        type: integer
+      phone_number:
+        description: Phone number
+        example: "+79991234567"
+        type: string
+      role:
+        description: 'User role: user or admin'
+        enum:
+        - user
+        - ' admin'
+        example: user
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Gateway API for flight booking service
+  title: Flyte API
+  version: "1.0"
+paths:
+  /aircrafts:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new aircraft model. Admin only.
+      parameters:
+      - description: Aircraft data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/flight.CreateAircraftRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Aircraft created
+          schema:
+            $ref: '#/definitions/flight.IDResponse'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "409":
+          description: Model already exists
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create aircraft
+      tags:
+      - aircrafts
+  /aircrafts/{id}/seats:
+    get:
+      description: Returns the seat template for an aircraft.
+      parameters:
+      - description: Aircraft ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Seat map
+          schema:
+            items:
+              $ref: '#/definitions/flight.SeatTemplateResponse'
+            type: array
+        "404":
+          description: Aircraft not found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get aircraft seat map
+      tags:
+      - aircrafts
+    post:
+      consumes:
+      - application/json
+      description: Adds seat definitions to an existing aircraft. Admin only.
+      parameters:
+      - description: Aircraft ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Seat definitions
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/flight.AddAircraftSeatsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Seats added
+          schema:
+            $ref: '#/definitions/flight.AddAircraftSeatsResponse'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Aircraft not found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Add seats to aircraft
+      tags:
+      - aircrafts
+  /airlines:
+    get:
+      description: Returns a paginated list of airlines.
+      parameters:
+      - default: 20
+        description: Max results
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of airlines
+          schema:
+            items:
+              $ref: '#/definitions/flight.AirlineResponse'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: List airlines
+      tags:
+      - airlines
+    post:
+      consumes:
+      - application/json
+      description: Creates a new airline. Admin only.
+      parameters:
+      - description: Airline data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/flight.CreateAirlineRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Airline created
+          schema:
+            $ref: '#/definitions/flight.IDResponse'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "409":
+          description: IATA code already exists
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create airline
+      tags:
+      - airlines
+  /airlines/{id}:
+    get:
+      description: Returns airline information by ID.
+      parameters:
+      - description: Airline ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Airline info
+          schema:
+            $ref: '#/definitions/flight.AirlineResponse'
+        "404":
+          description: Airline not found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get airline by ID
+      tags:
+      - airlines
+  /airports/{code}:
+    get:
+      description: Returns airport information by IATA code.
+      parameters:
+      - description: IATA airport code
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Airport info
+          schema:
+            $ref: '#/definitions/flight.AirportResponse'
+        "404":
+          description: Airport not found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get airport by code
+      tags:
+      - airports
+  /airports/search:
+    get:
+      description: Searches airports by name, city, or IATA code.
+      parameters:
+      - description: Search query (name, city, or IATA code)
+        in: query
+        name: query
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of matching airports
+          schema:
+            items:
+              $ref: '#/definitions/flight.AirportResponse'
+            type: array
+        "400":
+          description: Invalid query
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Search airports
+      tags:
+      - airports
+  /auth/sign-in:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user by email and password, returns a JWT token.
+      parameters:
+      - description: Login credentials
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/user.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Authenticated successfully
+          schema:
+            $ref: '#/definitions/user.LoginResponse'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Authenticate user
+      tags:
+      - auth
+  /auth/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account with the provided email, password, and
+        phone number.
+      parameters:
+      - description: Registration data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/user.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created successfully
+          schema:
+            $ref: '#/definitions/user.RegisterResponse'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "409":
+          description: Email already taken
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - auth
+  /bookings:
+    get:
+      description: Returns all bookings for the authenticated user with pagination.
+      parameters:
+      - default: 20
+        description: Max results
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of bookings
+          schema:
+            items:
+              $ref: '#/definitions/booking.BookingResponse'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List user bookings
+      tags:
+      - bookings
+    post:
+      consumes:
+      - application/json
+      description: Creates a new booking with one or more passengers and reserves
+        their seats.
+      parameters:
+      - description: Booking data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/booking.CreateBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Booking created
+          schema:
+            $ref: '#/definitions/booking.CreateBookingResponse'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "409":
+          description: Seat already taken
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a booking
+      tags:
+      - bookings
+  /bookings/{id}:
+    get:
+      description: Returns full details for a booking. Only the booking owner can
+        access it.
+      parameters:
+      - description: Booking ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Booking details
+          schema:
+            $ref: '#/definitions/booking.BookingResponse'
+        "400":
+          description: Invalid booking ID
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "403":
+          description: Forbidden — not the booking owner
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Booking not found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get booking details
+      tags:
+      - bookings
+  /bookings/{id}/cancel:
+    post:
+      description: Cancels a booking and releases reserved seats. Only the booking
+        owner can cancel.
+      parameters:
+      - description: Booking ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: Booking cancelled
+        "400":
+          description: Invalid booking ID
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "403":
+          description: Forbidden — not the booking owner
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Booking not found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cancel a booking
+      tags:
+      - bookings
+  /bookings/ref/{ref}:
+    get:
+      description: Returns full details for a booking by its short reference code.
+        Only the booking owner can access it.
+      parameters:
+      - description: Reference code
+        in: path
+        name: ref
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Booking details
+          schema:
+            $ref: '#/definitions/booking.BookingResponse'
+        "403":
+          description: Forbidden — not the booking owner
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Booking not found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get booking by reference code
+      tags:
+      - bookings
+  /flights:
+    get:
+      description: Searches for available flights by route, date, and optional seat
+        class.
+      parameters:
+      - description: Departure airport IATA code (e.g. DME)
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: Arrival airport IATA code (e.g. LED)
+        in: query
+        name: to
+        required: true
+        type: string
+      - description: Departure date in YYYY-MM-DD format
+        in: query
+        name: date
+        required: true
+        type: string
+      - default: 1
+        description: Number of passengers
+        in: query
+        name: passengers
+        type: integer
+      - description: Seat class filter
+        enum:
+        - economy
+        - business
+        - first
+        in: query
+        name: seat_class
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of matching flights
+          schema:
+            items:
+              $ref: '#/definitions/flight.FlightResponse'
+            type: array
+        "400":
+          description: Invalid query parameters
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Search flights
+      tags:
+      - flights
+    post:
+      consumes:
+      - application/json
+      description: Creates a new flight with fare rules. Admin only.
+      parameters:
+      - description: Flight data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/flight.CreateFlightRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Flight created
+          schema:
+            $ref: '#/definitions/flight.IDResponse'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create flight
+      tags:
+      - flights
+  /flights/{id}:
+    get:
+      description: Returns full details for a specific flight.
+      parameters:
+      - description: Flight ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Flight details
+          schema:
+            $ref: '#/definitions/flight.FlightResponse'
+        "404":
+          description: Flight not found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get flight details
+      tags:
+      - flights
+  /flights/{id}/fares:
+    get:
+      description: Returns fare rules (price per seat class) for a specific flight.
+      parameters:
+      - description: Flight ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of fare rules
+          schema:
+            items:
+              $ref: '#/definitions/flight.FareRuleResponse'
+            type: array
+        "404":
+          description: Flight not found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get flight fares
+      tags:
+      - flights
+  /flights/{id}/seats/reserved:
+    get:
+      description: Returns all seat reservations for a specific flight. Admin only.
+      parameters:
+      - description: Flight ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of reservations
+          schema:
+            items:
+              $ref: '#/definitions/flight.SeatReservationResponse'
+            type: array
+        "404":
+          description: Flight not found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get reserved seats
+      tags:
+      - reservations
+  /flights/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Updates the status of a flight. Admin only.
+      parameters:
+      - description: Flight ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New status
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/flight.UpdateFlightStatusRequest'
+      responses:
+        "204":
+          description: Status updated
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Flight not found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update flight status
+      tags:
+      - flights
+  /users/{id}:
+    get:
+      description: Returns profile information for the specified user. Only the account
+        owner can access this.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile
+          schema:
+            $ref: '#/definitions/user.UserResponse'
+        "403":
+          description: Forbidden — not the account owner
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user profile
+      tags:
+      - users
+  /users/{id}/passengers:
+    get:
+      description: Returns all passengers belonging to the specified user.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of passengers
+          schema:
+            items:
+              $ref: '#/definitions/user.PassengerResponse'
+            type: array
+        "403":
+          description: Forbidden — not the account owner
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List passengers
+      tags:
+      - passengers
+    post:
+      consumes:
+      - application/json
+      description: Creates a new passenger record linked to the specified user.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Passenger data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/user.PassengerInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Passenger created
+          schema:
+            $ref: '#/definitions/user.AddPassengerResponse'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "403":
+          description: Forbidden — not the account owner
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "409":
+          description: Duplicate passenger document
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Add a passenger
+      tags:
+      - passengers
+  /users/{id}/passengers/{passengerId}:
+    delete:
+      description: Removes a passenger record belonging to the specified user.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Passenger ID
+        in: path
+        name: passengerId
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: Passenger deleted
+        "403":
+          description: Forbidden — not the account owner
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Passenger not found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a passenger
+      tags:
+      - passengers
+securityDefinitions:
+  BearerAuth:
+    description: Enter "Bearer {token}"
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

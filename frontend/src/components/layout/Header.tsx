@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/authStore'
 
 export function Header() {
-  const { token, userId } = useAuthStore()
+  const { token, email } = useAuthStore()
   const logout = useAuthStore((s) => s.logout)
   const qc = useQueryClient()
   const navigate = useNavigate()
@@ -36,7 +36,7 @@ export function Header() {
         <div className="flex items-center gap-2">
           {token ? (
             <>
-              <span className="text-sm text-muted-foreground">#{userId}</span>
+              <span className="text-sm text-muted-foreground">{email}</span>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 Выйти
               </Button>

@@ -8,6 +8,7 @@ func RegisterRoutes(rg *gin.RouterGroup, h *Handler, authMiddleware, adminMiddle
 		flights.GET("", h.SearchFlights)
 		flights.GET("/:id", h.GetFlightDetails)
 		flights.GET("/:id/fares", h.GetFlightFares)
+		flights.GET("/:id/seats/reserved/public", h.GetReservedSeatNumbers)
 	}
 
 	airports := rg.Group("/airports")

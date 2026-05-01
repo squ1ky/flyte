@@ -243,6 +243,39 @@ func (h *Handler) GetReservedSeats(c *gin.Context) {
 	c.JSON(http.StatusOK, seats)
 }
 
+// GetReservedSeatNumbers godoc
+//
+//	@Summary		Get reserved seat numbers
+//	@Description	Returns seat numbers that are currently reserved for a specific flight.
+//	@Tags			flights
+//	@Produce		json
+//	@Param			id	path		int			true	"Flight ID"
+//	@Success		200	{array}		string		"List of reserved seat numbers"
+//	@Failure		404	{object}	common.ErrorResponse	"Flight not found"
+//	@Failure		500	{object}	common.ErrorResponse	"Internal server error"
+//	@Router			/flights/{id}/seats/reserved/public [get]
+func (h *Handler) GetReservedSeatNumbers(c *gin.Context) {
+	flightID, ok := common.ParseID(c, paramFlightID)
+	if !ok {
+		return
+	}
+
+	resp, err := h.client.GetReservedSeats(c.Request.Context(), &flightv1.GetReservedSeatsRequest{
+		FlightId: flightID,
+	})
+	if err != nil {
+		common.HandleGRPCError(c, err)
+		return
+	}
+
+	seatNumbers := make([]string, len(resp.Seats))
+	for i, seat := range resp.Seats {
+		seatNumbers[i] = seat.SeatNumber
+	}
+
+	c.JSON(http.StatusOK, seatNumbers)
+}
+
 // GetAirport godoc
 //
 //	@Summary		Get airport by code

@@ -2,7 +2,7 @@ export type Role = 'user' | 'admin'
 
 export type Gender = 'male' | 'female'
 
-export type DocumentType = 'passport'
+export type DocumentType = 'passport' | 'international_passport'
 
 // --- Auth ---
 

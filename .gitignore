@@ -1,3 +1,5 @@
+.gitignore
+
 # Binaries
 /bin/
 *.exe
@@ -27,7 +29,3 @@ frontend/lerna-debug.log*
 frontend/dist
 frontend/dist-ssr
 frontend/*.local
-
-CLAUDE.md
-FRONTEND_CONTEXT.md
-FRONTEND_PLAN.md

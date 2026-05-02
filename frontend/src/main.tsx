@@ -11,6 +11,7 @@ import { RegisterPage } from '@/pages/public/RegisterPage'
 import { NotFoundPage } from '@/pages/public/NotFoundPage'
 import { ProfilePage } from '@/pages/private/ProfilePage'
 import { BookingPage } from '@/pages/private/BookingPage'
+import { BookingDetailsPage } from '@/pages/private/BookingDetailsPage'
 
 const queryClient = new QueryClient()
 
@@ -35,6 +36,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <BookingPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'bookings/:id',
+        element: (
+          <ProtectedRoute>
+            <BookingDetailsPage />
           </ProtectedRoute>
         ),
       },

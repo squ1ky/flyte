@@ -21,6 +21,8 @@ api.interceptors.response.use(
       window.location.href = '/login'
     }
     const message = error.response?.data?.message ?? 'Network error'
-    return Promise.reject(new Error(message))
+    const err = new Error(message)
+    ;(err as Error & { status?: number }).status = error.response?.status
+    return Promise.reject(err)
   }
 )

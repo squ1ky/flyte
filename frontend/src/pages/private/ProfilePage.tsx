@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { UserCircle, Users } from 'lucide-react'
+import { Ticket, UserCircle, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getUser, getPassengers } from '@/api/endpoints/user'
 import { useAuthStore } from '@/store/authStore'
 import { PassengerForm } from '@/features/profile/PassengerForm'
 import { PassengerCard } from '@/features/profile/PassengerCard'
+import { BookingsList } from '@/features/profile/BookingsList'
 
 export function ProfilePage() {
   const userId = useAuthStore((s) => s.userId)
@@ -79,6 +80,14 @@ export function ProfilePage() {
             ))}
           </div>
         )}
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <Ticket className="h-5 w-5 text-muted-foreground" />
+          <h2 className="text-xl font-semibold">Бронирования</h2>
+        </div>
+        <BookingsList />
       </section>
     </div>
   )

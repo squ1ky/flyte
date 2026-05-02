@@ -60,3 +60,8 @@ export async function getAircraftSeats(aircraftId: number): Promise<SeatResponse
   const { data } = await api.get<SeatResponse[]>(`/aircrafts/${aircraftId}/seats`)
   return data
 }
+
+export async function getReservedSeatNumbers(flightId: number): Promise<string[]> {
+  const { data } = await api.get<string[]>(`/flights/${flightId}/seats/reserved/public`)
+  return data
+}

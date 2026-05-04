@@ -105,3 +105,12 @@ func (s *FlightService) GetFares(ctx context.Context, flightID int64) ([]domain.
 	}
 	return fares, err
 }
+
+func (s *FlightService) List(ctx context.Context, limit, offset int) ([]domain.FlightDocument, error) {
+	docs, err := s.repo.List(ctx, limit, offset)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to list flights", slog.Any("error", err))
+		return nil, fmt.Errorf("list flights: %w", err)
+	}
+	return docs, nil
+}

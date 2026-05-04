@@ -75,6 +75,17 @@ func airportToProto(a *domain.Airport) *pb.Airport {
 	}
 }
 
+func aircraftToProto(a *domain.Aircraft) *pb.Aircraft {
+	if a == nil {
+		return nil
+	}
+	return &pb.Aircraft{
+		Id:         a.ID,
+		Model:      a.Model,
+		TotalSeats: int32(a.TotalSeats),
+	}
+}
+
 func airlineToProto(a *domain.Airline) *pb.Airline {
 	if a == nil {
 		return nil

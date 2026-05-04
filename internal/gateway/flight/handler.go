@@ -2,10 +2,11 @@ package flight
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	flightv1 "github.com/squ1ky/flyte/gen/proto/flight"
 	"github.com/squ1ky/flyte/internal/gateway/common"
-	"net/http"
 )
 
 const (
@@ -51,17 +52,37 @@ func (h *Handler) SearchFlights(c *gin.Context) {
 		return
 	}
 
-	depDate, err := timestampFromDateStr(q.Date)
-	if err != nil {
-		common.AbortWithError(c, http.StatusBadRequest, msgInvalidDate)
+	// If all three search params are provided — use ES search; otherwise — DB listing.
+	if q.From != "" && q.To != "" && q.Date != "" {
+		depDate, err := timestampFromDateStr(q.Date)
+		if err != nil {
+			common.AbortWithError(c, http.StatusBadRequest, msgInvalidDate)
+			return
+		}
+
+		resp, err := h.client.SearchFlights(c.Request.Context(), &flightv1.SearchFlightsRequest{
+			FromAirportCode: q.From,
+			ToAirportCode:   q.To,
+			DepartureDate:   depDate,
+			PassengerCount:  q.Passengers,
+			SeatClass:       seatClassToProto(q.SeatClass),
+		})
+		if err != nil {
+			common.HandleGRPCError(c, err)
+			return
+		}
+
+		flights := make([]FlightResponse, len(resp.Flights))
+		for i, f := range resp.Flights {
+			flights[i] = mapProtoToFlight(f)
+		}
+		c.JSON(http.StatusOK, flights)
+		return
 	}
 
-	resp, err := h.client.SearchFlights(c.Request.Context(), &flightv1.SearchFlightsRequest{
-		FromAirportCode: q.From,
-		ToAirportCode:   q.To,
-		DepartureDate:   depDate,
-		PassengerCount:  q.Passengers,
-		SeatClass:       seatClassToProto(q.SeatClass),
+	resp, err := h.client.ListFlights(c.Request.Context(), &flightv1.ListFlightsRequest{
+		Limit:  q.Limit,
+		Offset: q.Offset,
 	})
 	if err != nil {
 		common.HandleGRPCError(c, err)
@@ -69,10 +90,9 @@ func (h *Handler) SearchFlights(c *gin.Context) {
 	}
 
 	flights := make([]FlightResponse, len(resp.Flights))
-	for i, flight := range resp.Flights {
-		flights[i] = mapProtoToFlight(flight)
+	for i, f := range resp.Flights {
+		flights[i] = mapProtoToFlight(f)
 	}
-
 	c.JSON(http.StatusOK, flights)
 }
 
@@ -465,6 +485,41 @@ func (h *Handler) AddAircraftSeats(c *gin.Context) {
 //	@Failure		404	{object}	common.ErrorResponse		"Aircraft not found"
 //	@Failure		500	{object}	common.ErrorResponse		"Internal server error"
 //	@Router			/aircrafts/{id}/seats [get]
+
+// ListAircrafts godoc
+//
+//	@Summary		List aircrafts
+//	@Description	Returns a paginated list of aircrafts.
+//	@Tags			aircrafts
+//	@Produce		json
+//	@Param			limit	query		int	false	"Max results"	default(20)
+//	@Param			offset	query		int	false	"Offset"		default(0)
+//	@Success		200		{array}		AircraftResponse			"List of aircrafts"
+//	@Failure		500		{object}	common.ErrorResponse		"Internal server error"
+//	@Router			/aircrafts [get]
+func (h *Handler) ListAircrafts(c *gin.Context) {
+	const defaultLimit = 20
+	const defaultOffset = 0
+
+	limit := int32(common.QueryInt(c, "limit", defaultLimit))
+	offset := int32(common.QueryInt(c, "offset", defaultOffset))
+
+	resp, err := h.client.ListAircrafts(c.Request.Context(), &flightv1.ListAircraftsRequest{
+		Limit:  limit,
+		Offset: offset,
+	})
+	if err != nil {
+		common.HandleGRPCError(c, err)
+		return
+	}
+
+	aircrafts := make([]AircraftResponse, len(resp.Aircrafts))
+	for i, a := range resp.Aircrafts {
+		aircrafts[i] = mapProtoToAircraft(a)
+	}
+	c.JSON(http.StatusOK, aircrafts)
+}
+
 func (h *Handler) GetAircraftSeats(c *gin.Context) {
 	aircraftID, ok := common.ParseID(c, paramAircraftID)
 	if !ok {

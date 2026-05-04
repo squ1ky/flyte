@@ -10,6 +10,7 @@ type FlightStorage interface {
 	UpdateStatus(ctx context.Context, flightID int64, status FlightStatus) error
 	GetByID(ctx context.Context, flightID int64) (*Flight, error)
 	GetFaresByFlightID(ctx context.Context, flightID int64) ([]FlightFare, error)
+	List(ctx context.Context, limit, offset int) ([]FlightDocument, error)
 }
 
 type SeatReservationParams struct {
@@ -42,6 +43,7 @@ type ReservationStorage interface {
 type AircraftStorage interface {
 	Create(ctx context.Context, aircraft *Aircraft) (int64, error)
 	GetByID(ctx context.Context, aircraftID int64) (*Aircraft, error)
+	List(ctx context.Context, limit, offset int) ([]Aircraft, error)
 
 	AddSeats(ctx context.Context, aircraftID int64, seats []AircraftSeat) error
 	GetSeatsByAircraftID(ctx context.Context, aircraftID int64) ([]AircraftSeat, error)

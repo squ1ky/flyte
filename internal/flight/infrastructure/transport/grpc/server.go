@@ -11,6 +11,7 @@ type AircraftService interface {
 	GetByID(ctx context.Context, aircraftID int64) (*domain.Aircraft, error)
 	AddSeats(ctx context.Context, aircraftID int64, seats []domain.AircraftSeat) error
 	GetSeats(ctx context.Context, aircraftID int64) ([]domain.AircraftSeat, error)
+	List(ctx context.Context, limit, offset int) ([]domain.Aircraft, error)
 }
 
 type AirlineService interface {
@@ -30,6 +31,7 @@ type FlightService interface {
 	UpdateStatus(ctx context.Context, flightID int64, status domain.FlightStatus) error
 	GetByID(ctx context.Context, flightID int64) (*domain.Flight, error)
 	GetFares(ctx context.Context, flightID int64) ([]domain.FlightFare, error)
+	List(ctx context.Context, limit, offset int) ([]domain.FlightDocument, error)
 }
 
 type ReservationService interface {

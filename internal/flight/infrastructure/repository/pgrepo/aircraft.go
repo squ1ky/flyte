@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/squ1ky/flyte/internal/flight/domain"
@@ -65,6 +66,19 @@ func (r *AircraftRepo) AddSeats(ctx context.Context, aircraftID int64, seats []d
 		return fmt.Errorf("batch insert seats: %w", err)
 	}
 	return nil
+}
+
+func (r *AircraftRepo) List(ctx context.Context, limit, offset int) ([]domain.Aircraft, error) {
+	query := `
+		SELECT * FROM aircrafts
+		ORDER BY id
+		LIMIT $1 OFFSET $2
+	`
+	aircrafts := make([]domain.Aircraft, 0)
+	if err := r.db.SelectContext(ctx, &aircrafts, query, limit, offset); err != nil {
+		return nil, fmt.Errorf("list aircrafts: %w", err)
+	}
+	return aircrafts, nil
 }
 
 func (r *AircraftRepo) GetSeatsByAircraftID(ctx context.Context, aircraftID int64) ([]domain.AircraftSeat, error) {

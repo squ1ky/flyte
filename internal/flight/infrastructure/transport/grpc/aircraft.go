@@ -33,6 +33,19 @@ func (s *Server) AddAircraftSeats(ctx context.Context, req *pb.AddAircraftSeatsR
 	return &pb.AddAircraftSeatsResponse{SeatsAdded: int32(len(seats))}, nil
 }
 
+func (s *Server) ListAircrafts(ctx context.Context, req *pb.ListAircraftsRequest) (*pb.ListAircraftsResponse, error) {
+	aircrafts, err := s.aircraft.List(ctx, int(req.GetLimit()), int(req.GetOffset()))
+	if err != nil {
+		return nil, toGRPCError(err)
+	}
+
+	result := make([]*pb.Aircraft, 0, len(aircrafts))
+	for i := range aircrafts {
+		result = append(result, aircraftToProto(&aircrafts[i]))
+	}
+	return &pb.ListAircraftsResponse{Aircrafts: result}, nil
+}
+
 func (s *Server) GetAircraftSeats(ctx context.Context, req *pb.GetAircraftSeatsRequest) (*pb.GetAircraftSeatsResponse, error) {
 	seats, err := s.aircraft.GetSeats(ctx, req.GetAircraftId())
 	if err != nil {

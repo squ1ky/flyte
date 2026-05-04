@@ -1,17 +1,23 @@
 package flight
 
 // SearchFlightsQuery represents query parameters for the flight search endpoint.
+// When from, to, and date are all provided the endpoint performs an ES search.
+// Otherwise it returns a paginated list of upcoming flights from the DB.
 type SearchFlightsQuery struct {
 	// Departure airport IATA code
-	From string `form:"from" binding:"required,len=3" example:"DME"`
+	From string `form:"from" binding:"omitempty,len=3" example:"DME"`
 	// Arrival airport IATA code
-	To string `form:"to" binding:"required,len=3" example:"LED"`
+	To string `form:"to" binding:"omitempty,len=3" example:"LED"`
 	// Departure date in YYYY-MM-DD format
-	Date string `form:"date" binding:"required" example:"2025-07-15"`
+	Date string `form:"date" binding:"omitempty" example:"2025-07-15"`
 	// Number of passengers (default: 1)
 	Passengers int32 `form:"passengers,default=1" binding:"min=1" example:"1"`
 	// Seat class filter: economy, business, first (optional)
 	SeatClass string `form:"seat_class" binding:"omitempty,oneof=economy business first" example:"economy"`
+	// Max results for list mode (default: 20)
+	Limit int32 `form:"limit,default=20" binding:"min=1,max=100" example:"20"`
+	// Offset for list mode (default: 0)
+	Offset int32 `form:"offset,default=0" binding:"min=0" example:"0"`
 }
 
 // SearchAirportsQuery represents query parameters for airport search.

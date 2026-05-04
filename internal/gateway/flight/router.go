@@ -25,6 +25,7 @@ func RegisterRoutes(rg *gin.RouterGroup, h *Handler, authMiddleware, adminMiddle
 
 	aircrafts := rg.Group("/aircrafts")
 	{
+		aircrafts.GET("", h.ListAircrafts)
 		aircrafts.GET("/:id/seats", h.GetAircraftSeats)
 	}
 

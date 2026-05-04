@@ -85,3 +85,12 @@ func (s *AircraftService) GetSeats(ctx context.Context, aircraftID int64) ([]dom
 	}
 	return seats, nil
 }
+
+func (s *AircraftService) List(ctx context.Context, limit, offset int) ([]domain.Aircraft, error) {
+	aircrafts, err := s.repo.List(ctx, limit, offset)
+	if err != nil {
+		s.logger.ErrorContext(ctx, "failed to list aircrafts", slog.Any("error", err))
+		return nil, fmt.Errorf("list aircrafts: %w", err)
+	}
+	return aircrafts, nil
+}

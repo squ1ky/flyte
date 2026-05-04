@@ -15,9 +15,11 @@ service FlightService {
   rpc GetFlightDetails (GetFlightDetailsRequest) returns (GetFlightDetailsResponse);
   rpc GetFlightFares (GetFlightFaresRequest) returns (GetFlightFaresResponse);
   rpc UpdateFlightStatus (UpdateFlightStatusRequest) returns (UpdateFlightStatusResponse);
+  rpc ListFlights (ListFlightsRequest) returns (ListFlightsResponse);
 
   // Aircraft
   rpc GetAircraftSeats (GetAircraftSeatsRequest) returns (GetAircraftSeatsResponse);
+  rpc ListAircrafts (ListAircraftsRequest) returns (ListAircraftsResponse);
 
   // Dictionaries
   rpc GetAirline (GetAirlineRequest) returns (GetAirlineResponse);
@@ -225,6 +227,24 @@ message GetReservedSeatsRequest {
 
 message GetReservedSeatsResponse {
   repeated SeatReservation seats = 1;
+}
+
+message ListFlightsRequest {
+  int32 limit = 1;
+  int32 offset = 2;
+}
+
+message ListFlightsResponse {
+  repeated Flight flights = 1;
+}
+
+message ListAircraftsRequest {
+  int32 limit = 1;
+  int32 offset = 2;
+}
+
+message ListAircraftsResponse {
+  repeated Aircraft aircrafts = 1;
 }
 
 message CreateFlightRequest {

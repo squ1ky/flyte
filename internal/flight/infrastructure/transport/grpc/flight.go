@@ -59,6 +59,19 @@ func (s *Server) UpdateFlightStatus(ctx context.Context, req *pb.UpdateFlightSta
 	return &pb.UpdateFlightStatusResponse{}, nil
 }
 
+func (s *Server) ListFlights(ctx context.Context, req *pb.ListFlightsRequest) (*pb.ListFlightsResponse, error) {
+	docs, err := s.flight.List(ctx, int(req.GetLimit()), int(req.GetOffset()))
+	if err != nil {
+		return nil, toGRPCError(err)
+	}
+
+	flights := make([]*pb.Flight, 0, len(docs))
+	for i := range docs {
+		flights = append(flights, flightDocToProto(&docs[i]))
+	}
+	return &pb.ListFlightsResponse{Flights: flights}, nil
+}
+
 func (s *Server) CreateFlight(ctx context.Context, req *pb.CreateFlightRequest) (*pb.CreateFlightResponse, error) {
 	flight := &domain.Flight{
 		FlightNumber:         req.GetFlightNumber(),

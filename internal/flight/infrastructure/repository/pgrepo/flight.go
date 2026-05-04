@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/squ1ky/flyte/internal/flight/domain"
@@ -112,4 +114,105 @@ func (r *FlightRepo) GetFaresByFlightID(ctx context.Context, flightID int64) ([]
 		return nil, fmt.Errorf("get fares: %w", err)
 	}
 	return fares, nil
+}
+
+type flightListRow struct {
+	FlightID        int64               `db:"flight_id"`
+	FlightNumber    string              `db:"flight_number"`
+	DepartureTime   time.Time           `db:"departure_time"`
+	ArrivalTime     time.Time           `db:"arrival_time"`
+	Status          domain.FlightStatus `db:"status"`
+	MinPriceCents   int64               `db:"min_price_cents"`
+	AvailableSeats  int                 `db:"available_seats"`
+	AirlineID       int64               `db:"airline_id"`
+	AirlineIataCode string              `db:"airline_iata_code"`
+	AirlineName     string              `db:"airline_name"`
+	AirlineCountry  string              `db:"airline_country"`
+	AirlineLogoURL  string              `db:"airline_logo_url"`
+	DepCode         string              `db:"dep_code"`
+	DepName         string              `db:"dep_name"`
+	DepCity         string              `db:"dep_city"`
+	DepCountry      string              `db:"dep_country"`
+	DepTimezone     string              `db:"dep_timezone"`
+	ArrCode         string              `db:"arr_code"`
+	ArrName         string              `db:"arr_name"`
+	ArrCity         string              `db:"arr_city"`
+	ArrCountry      string              `db:"arr_country"`
+	ArrTimezone     string              `db:"arr_timezone"`
+}
+
+func (r *FlightRepo) List(ctx context.Context, limit, offset int) ([]domain.FlightDocument, error) {
+	query := `
+		SELECT
+		    f.id               AS flight_id,
+		    f.flight_number,
+		    f.departure_time,
+		    f.arrival_time,
+		    f.status,
+		    COALESCE(MIN(ff.price_cents), 0)                       AS min_price_cents,
+		    COALESCE(SUM(ff.seats_total - ff.seats_booked), 0)     AS available_seats,
+		    al.id              AS airline_id,
+		    al.iata_code       AS airline_iata_code,
+		    al.name            AS airline_name,
+		    al.country         AS airline_country,
+		    al.logo_url        AS airline_logo_url,
+		    dep.code           AS dep_code,
+		    dep.name           AS dep_name,
+		    dep.city           AS dep_city,
+		    dep.country        AS dep_country,
+		    dep.timezone       AS dep_timezone,
+		    arr.code           AS arr_code,
+		    arr.name           AS arr_name,
+		    arr.city           AS arr_city,
+		    arr.country        AS arr_country,
+		    arr.timezone       AS arr_timezone
+		FROM flights f
+		JOIN airlines al  ON al.id    = f.airline_id
+		JOIN airports dep ON dep.code = f.departure_airport
+		JOIN airports arr ON arr.code = f.arrival_airport
+		LEFT JOIN flight_fares ff ON ff.flight_id = f.id
+		GROUP BY f.id, al.id, dep.code, arr.code
+		ORDER BY f.departure_time DESC
+		LIMIT $1 OFFSET $2
+	`
+
+	var rows []flightListRow
+	if err := r.db.SelectContext(ctx, &rows, query, limit, offset); err != nil {
+		return nil, fmt.Errorf("list flights: %w", err)
+	}
+
+	docs := make([]domain.FlightDocument, len(rows))
+	for i, row := range rows {
+		docs[i] = domain.FlightDocument{
+			ID:             row.FlightID,
+			FlightNumber:   row.FlightNumber,
+			DepartureTime:  row.DepartureTime,
+			ArrivalTime:    row.ArrivalTime,
+			Status:         row.Status,
+			MinPriceCents:  row.MinPriceCents,
+			AvailableSeats: row.AvailableSeats,
+			Airline: domain.Airline{
+				ID:       row.AirlineID,
+				IATACode: row.AirlineIataCode,
+				Name:     row.AirlineName,
+				Country:  row.AirlineCountry,
+				LogoURL:  row.AirlineLogoURL,
+			},
+			Departure: domain.Airport{
+				Code:     row.DepCode,
+				Name:     row.DepName,
+				City:     row.DepCity,
+				Country:  row.DepCountry,
+				Timezone: row.DepTimezone,
+			},
+			Arrival: domain.Airport{
+				Code:     row.ArrCode,
+				Name:     row.ArrName,
+				City:     row.ArrCity,
+				Country:  row.ArrCountry,
+				Timezone: row.ArrTimezone,
+			},
+		}
+	}
+	return docs, nil
 }

@@ -15,10 +15,9 @@ export function HomePage() {
   const from = searchParams.get('from') ?? ''
   const to = searchParams.get('to') ?? ''
   const date = searchParams.get('date') ?? ''
-  const passengers = Number(searchParams.get('passengers') ?? 1)
   const seat_class = (searchParams.get('seat_class') as SeatClass | null) ?? undefined
 
-  const params: SearchFlightsParams = { from, to, date, passengers, seat_class }
+  const params: SearchFlightsParams = { from, to, date, seat_class }
 
   const isReady = !!from && !!to && !!date
 

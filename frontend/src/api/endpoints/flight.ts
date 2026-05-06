@@ -4,6 +4,7 @@ import type {
   FareResponse,
   AirportResponse,
   AirlineResponse,
+  AircraftResponse,
   SeatResponse,
   SeatClass,
 } from '@/types/flight'
@@ -12,11 +13,10 @@ export interface SearchFlightsParams {
   from: string
   to: string
   date: string
-  passengers?: number
   seat_class?: SeatClass
 }
 
-export interface ListAirlinesParams {
+export interface PaginationParams {
   limit?: number
   offset?: number
 }
@@ -46,8 +46,18 @@ export async function getAirport(code: string): Promise<AirportResponse> {
   return data
 }
 
-export async function listAirlines(params?: ListAirlinesParams): Promise<AirlineResponse[]> {
+export async function listAirlines(params?: PaginationParams): Promise<AirlineResponse[]> {
   const { data } = await api.get<AirlineResponse[]>('/airlines', { params })
+  return data
+}
+
+export async function listFlights(params?: PaginationParams): Promise<FlightResponse[]> {
+  const { data } = await api.get<FlightResponse[]>('/flights', { params })
+  return data
+}
+
+export async function listAircrafts(params?: PaginationParams): Promise<AircraftResponse[]> {
+  const { data } = await api.get<AircraftResponse[]>('/aircrafts', { params })
   return data
 }
 

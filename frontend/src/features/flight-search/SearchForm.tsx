@@ -26,7 +26,6 @@ const schema = z.object({
     .string()
     .min(1, 'Выберите дату')
     .refine(v => v >= today, 'Дата не может быть в прошлом'),
-  passengers: z.coerce.number().min(1, 'Мин. 1').max(9, 'Макс. 9'),
   seat_class: z.enum(['economy', 'business', 'first']).optional(),
 })
 
@@ -37,7 +36,6 @@ function paramsToValues(params: URLSearchParams): FormValues {
     from: params.get('from') ?? '',
     to: params.get('to') ?? '',
     date: params.get('date') ?? '',
-    passengers: Number(params.get('passengers') ?? 1),
     seat_class: (params.get('seat_class') as SeatClass | null) ?? undefined,
   }
 }
@@ -67,7 +65,6 @@ export function SearchForm() {
       from: values.from,
       to: values.to,
       date: values.date,
-      passengers: String(values.passengers),
     }
     if (values.seat_class) params.seat_class = values.seat_class
     setSearchParams(params)
@@ -134,15 +131,6 @@ export function SearchForm() {
           <Label>Дата</Label>
           <Input type="date" min={today} {...register('date')} />
           {errors.date && <p className="text-xs text-destructive">{errors.date.message}</p>}
-        </div>
-
-        {/* Passengers */}
-        <div className="w-28 space-y-1">
-          <Label>Пассажиры</Label>
-          <Input type="number" min={1} max={9} {...register('passengers')} />
-          {errors.passengers && (
-            <p className="text-xs text-destructive">{errors.passengers.message}</p>
-          )}
         </div>
 
         {/* Seat class */}

@@ -2,9 +2,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/authStore'
+import { Badge } from '@/components/ui/badge'
 
 export function Header() {
-  const { token, email } = useAuthStore()
+  const { token, email, role } = useAuthStore()
   const logout = useAuthStore((s) => s.logout)
   const qc = useQueryClient()
   const navigate = useNavigate()
@@ -29,6 +30,14 @@ export function Header() {
           {token && (
             <Link to="/profile" className="text-sm hover:text-foreground/80">
               Профиль
+            </Link>
+          )}
+          {role === 'admin' && (
+            <Link to="/admin" className="flex items-center gap-1 text-sm hover:text-foreground/80">
+              Админка
+              <Badge variant="secondary" className="h-4 px-1 text-[10px]">
+                admin
+              </Badge>
             </Link>
           )}
         </nav>

@@ -1,7 +1,7 @@
 export function formatPrice(cents: number, currency = 'RUB'): string {
   return new Intl.NumberFormat('ru-RU', {
     style: 'currency',
-    currency,
+    currency: currency || 'RUB',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(cents / 100)

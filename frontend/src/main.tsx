@@ -12,6 +12,10 @@ import { NotFoundPage } from '@/pages/public/NotFoundPage'
 import { ProfilePage } from '@/pages/private/ProfilePage'
 import { BookingPage } from '@/pages/private/BookingPage'
 import { BookingDetailsPage } from '@/pages/private/BookingDetailsPage'
+import { AdminLayout } from '@/pages/admin/AdminLayout'
+import { FlightsAdminPage } from '@/pages/admin/FlightsAdminPage'
+import { AirlinesAdminPage } from '@/pages/admin/AirlinesAdminPage'
+import { AircraftsAdminPage } from '@/pages/admin/AircraftsAdminPage'
 
 const queryClient = new QueryClient()
 
@@ -46,6 +50,19 @@ const router = createBrowserRouter([
             <BookingDetailsPage />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: 'admin',
+        element: (
+          <ProtectedRoute requireRole="admin">
+            <AdminLayout />
+          </ProtectedRoute>
+        ),
+        children: [
+          { index: true, element: <FlightsAdminPage /> },
+          { path: 'airlines', element: <AirlinesAdminPage /> },
+          { path: 'aircrafts', element: <AircraftsAdminPage /> },
+        ],
       },
       { path: '*', element: <NotFoundPage /> },
     ],

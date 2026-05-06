@@ -78,9 +78,6 @@ export function FlightCard({ flight }: Props) {
         <p className="text-xl font-bold text-primary">
           {formatPrice(flight.min_price_cents, flight.currency)}
         </p>
-        <p className="text-xs text-muted-foreground">
-          Доступно мест: {flight.available_seats}
-        </p>
       </div>
     </div>
   )

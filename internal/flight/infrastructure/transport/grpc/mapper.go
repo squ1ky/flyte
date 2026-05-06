@@ -114,6 +114,27 @@ func flightDocToProto(f *domain.FlightDocument) *pb.Flight {
 		Status:           flightStatusToProto(f.Status),
 		MinPriceCents:    f.MinPriceCents,
 		AvailableSeats:   int32(f.AvailableSeats),
+		Currency:         "RUB",
+	}
+}
+
+func flightDetailsToProto(f *domain.FlightDetails) *pb.Flight {
+	if f == nil {
+		return nil
+	}
+	return &pb.Flight{
+		Id:               f.ID,
+		FlightNumber:     f.FlightNumber,
+		Airline:          airlineToProto(&f.Airline),
+		Aircraft:         aircraftToProto(&f.Aircraft),
+		DepartureAirport: airportToProto(&f.Departure),
+		ArrivalAirport:   airportToProto(&f.Arrival),
+		DepartureTime:    timestamppb.New(f.DepartureTime),
+		ArrivalTime:      timestamppb.New(f.ArrivalTime),
+		Status:           flightStatusToProto(f.Status),
+		MinPriceCents:    f.MinPriceCents,
+		AvailableSeats:   int32(f.AvailableSeats),
+		Currency:         "RUB",
 	}
 }
 
@@ -127,6 +148,7 @@ func flightToProto(f *domain.Flight) *pb.Flight {
 		DepartureTime: timestamppb.New(f.DepartureTime),
 		ArrivalTime:   timestamppb.New(f.ArrivalTime),
 		Status:        flightStatusToProto(f.Status),
+		Currency:      "RUB",
 	}
 }
 

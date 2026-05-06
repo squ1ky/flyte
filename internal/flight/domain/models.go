@@ -114,6 +114,20 @@ func (f Flight) Validate() error {
 	return nil
 }
 
+type FlightDetails struct {
+	ID             int64
+	FlightNumber   string
+	DepartureTime  time.Time
+	ArrivalTime    time.Time
+	Status         FlightStatus
+	MinPriceCents  int64
+	AvailableSeats int
+	Airline        Airline
+	Aircraft       Aircraft
+	Departure      Airport
+	Arrival        Airport
+}
+
 type FlightFare struct {
 	ID          int64     `db:"id" json:"id"`
 	FlightID    int64     `db:"flight_id" json:"flight_id"`

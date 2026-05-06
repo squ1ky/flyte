@@ -8,7 +8,7 @@ import (
 type FlightStorage interface {
 	Create(ctx context.Context, flight *Flight, fares []FlightFare) (int64, error)
 	UpdateStatus(ctx context.Context, flightID int64, status FlightStatus) error
-	GetByID(ctx context.Context, flightID int64) (*Flight, error)
+	GetByID(ctx context.Context, flightID int64) (*FlightDetails, error)
 	GetFaresByFlightID(ctx context.Context, flightID int64) ([]FlightFare, error)
 	List(ctx context.Context, limit, offset int) ([]FlightDocument, error)
 }

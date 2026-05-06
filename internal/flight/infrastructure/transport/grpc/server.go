@@ -29,7 +29,7 @@ type FlightService interface {
 	Search(ctx context.Context, criteria domain.FlightSearchCriteria) ([]domain.FlightDocument, error)
 	Create(ctx context.Context, flight *domain.Flight, fares []domain.FlightFare) (int64, error)
 	UpdateStatus(ctx context.Context, flightID int64, status domain.FlightStatus) error
-	GetByID(ctx context.Context, flightID int64) (*domain.Flight, error)
+	GetByID(ctx context.Context, flightID int64) (*domain.FlightDetails, error)
 	GetFares(ctx context.Context, flightID int64) ([]domain.FlightFare, error)
 	List(ctx context.Context, limit, offset int) ([]domain.FlightDocument, error)
 }

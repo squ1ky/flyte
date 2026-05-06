@@ -34,7 +34,7 @@ func (s *Server) GetFlightDetails(ctx context.Context, req *pb.GetFlightDetailsR
 		return nil, toGRPCError(err)
 	}
 
-	return &pb.GetFlightDetailsResponse{Flight: flightToProto(flight)}, nil
+	return &pb.GetFlightDetailsResponse{Flight: flightDetailsToProto(flight)}, nil
 }
 
 func (s *Server) GetFlightFares(ctx context.Context, req *pb.GetFlightFaresRequest) (*pb.GetFlightFaresResponse, error) {
@@ -81,6 +81,7 @@ func (s *Server) CreateFlight(ctx context.Context, req *pb.CreateFlightRequest) 
 		ArrivalAirportCode:   req.GetArrivalAirportCode(),
 		DepartureTime:        req.GetDepartureTime().AsTime(),
 		ArrivalTime:          req.GetArrivalTime().AsTime(),
+		Status:               domain.FlightStatusScheduled,
 	}
 
 	fares := make([]domain.FlightFare, 0, len(req.GetFareRules()))

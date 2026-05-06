@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/squ1ky/flyte/internal/flight/domain"
-	"github.com/squ1ky/flyte/internal/flight/infrastructure/repository/outbox"
 	"log/slog"
 	"time"
+
+	"github.com/squ1ky/flyte/internal/flight/domain"
+	"github.com/squ1ky/flyte/internal/flight/infrastructure/repository/outbox"
 )
 
 const (
@@ -17,8 +18,6 @@ const (
 type ElasticSync struct {
 	outbox         outbox.Storage
 	flightRepo     domain.FlightStorage
-	airlineRepo    domain.AirlineStorage
-	airportRepo    domain.AirportStorage
 	flightSearcher domain.FlightSearcher
 	logger         *slog.Logger
 }
@@ -26,16 +25,12 @@ type ElasticSync struct {
 func NewElasticSync(
 	outbox outbox.Storage,
 	flightRepo domain.FlightStorage,
-	airlineRepo domain.AirlineStorage,
-	airportRepo domain.AirportStorage,
 	searcher domain.FlightSearcher,
 	logger *slog.Logger,
 ) *ElasticSync {
 	return &ElasticSync{
 		outbox:         outbox,
 		flightRepo:     flightRepo,
-		airlineRepo:    airlineRepo,
-		airportRepo:    airportRepo,
 		flightSearcher: searcher,
 		logger:         logger,
 	}
@@ -150,46 +145,16 @@ func (w *ElasticSync) buildFlightDocument(ctx context.Context, flightID int64) (
 		return nil, fmt.Errorf("get flight: %w", err)
 	}
 
-	fares, err := w.flightRepo.GetFaresByFlightID(ctx, flight.ID)
-	if err != nil {
-		return nil, fmt.Errorf("get fares: %w", err)
-	}
-
-	airline, err := w.airlineRepo.GetByID(ctx, flight.AirlineID)
-	if err != nil {
-		return nil, fmt.Errorf("get airline: %w", err)
-	}
-
-	departure, err := w.airportRepo.GetByCode(ctx, flight.DepartureAirportCode)
-	if err != nil {
-		return nil, fmt.Errorf("get departure airport: %w", err)
-	}
-
-	arrival, err := w.airportRepo.GetByCode(ctx, flight.ArrivalAirportCode)
-	if err != nil {
-		return nil, fmt.Errorf("get arrival airport: %w", err)
-	}
-
-	var minPrice int64
-	var availableSeats int
-	for i, fare := range fares {
-		available := fare.SeatsTotal - fare.SeatsBooked
-		availableSeats += available
-		if i == 0 || fare.PriceCents < minPrice {
-			minPrice = fare.PriceCents
-		}
-	}
-
 	return &domain.FlightDocument{
 		ID:             flight.ID,
 		FlightNumber:   flight.FlightNumber,
 		DepartureTime:  flight.DepartureTime,
 		ArrivalTime:    flight.ArrivalTime,
-		MinPriceCents:  minPrice,
-		AvailableSeats: availableSeats,
+		MinPriceCents:  flight.MinPriceCents,
+		AvailableSeats: flight.AvailableSeats,
 		Status:         flight.Status,
-		Airline:        *airline,
-		Departure:      *departure,
-		Arrival:        *arrival,
+		Airline:        flight.Airline,
+		Departure:      flight.Departure,
+		Arrival:        flight.Arrival,
 	}, nil
 }

@@ -118,19 +118,9 @@ func (r *FlightSearchRepo) buildSearchQuery(c domain.FlightSearchCriteria) map[s
 		})
 	}
 
-	if c.NumPassengers > 0 {
-		mustConditions = append(mustConditions, map[string]interface{}{
-			"range": map[string]interface{}{
-				"available_seats": map[string]interface{}{
-					"gte": c.NumPassengers,
-				},
-			},
-		})
-	}
-
 	mustConditions = append(mustConditions, map[string]interface{}{
 		"terms": map[string]interface{}{
-			"status": []string{string(domain.FlightStatusScheduled)},
+			"status.keyword": []string{string(domain.FlightStatusScheduled)},
 		},
 	})
 

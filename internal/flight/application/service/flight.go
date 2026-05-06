@@ -74,7 +74,7 @@ func (s *FlightService) UpdateStatus(ctx context.Context, flightID int64, status
 	return nil
 }
 
-func (s *FlightService) GetByID(ctx context.Context, flightID int64) (*domain.Flight, error) {
+func (s *FlightService) GetByID(ctx context.Context, flightID int64) (*domain.FlightDetails, error) {
 	if flightID <= 0 {
 		return nil, domain.ErrInvalidFlightID
 	}

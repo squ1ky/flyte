@@ -91,8 +91,6 @@ func New(cfg *config.Config, logger *slog.Logger) (*App, error) {
 	elasticSync := worker.NewElasticSync(
 		outboxRepo,
 		flightRepo,
-		airlineRepo,
-		airportRepo,
 		searchRepo,
 		logger,
 	)

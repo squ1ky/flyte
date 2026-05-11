@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/squ1ky/flyte/internal/booking/config"
 	"github.com/squ1ky/flyte/internal/booking/domain"
-	paymentmq "github.com/squ1ky/flyte/internal/booking/infrastructure/kafka/payment"
 	"github.com/squ1ky/flyte/internal/booking/infrastructure/outbox"
 	"log/slog"
 	"time"
@@ -15,14 +14,14 @@ const outboxBatchSize = 50
 
 type OutboxRelay struct {
 	outbox   outbox.Repository
-	producer *paymentmq.Producer
+	producer PaymentProducer
 	interval time.Duration
 	logger   *slog.Logger
 }
 
 func NewOutboxRelay(
 	outbox outbox.Repository,
-	producer *paymentmq.Producer,
+	producer PaymentProducer,
 	cfg config.OutboxConfig,
 	log *slog.Logger,
 ) *OutboxRelay {

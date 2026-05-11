@@ -4,19 +4,18 @@ import (
 	"context"
 	"fmt"
 	"github.com/squ1ky/flyte/internal/booking/domain"
-	flightclient "github.com/squ1ky/flyte/internal/booking/infrastructure/clients/grpc/flight"
 	"log/slog"
 )
 
 type CancelService struct {
 	bookings domain.BookingRepository
-	flights  *flightclient.Client
+	flights  FlightClient
 	logger   *slog.Logger
 }
 
 func NewCancelService(
 	bookings domain.BookingRepository,
-	flights *flightclient.Client,
+	flights FlightClient,
 	logger *slog.Logger,
 ) *CancelService {
 	return &CancelService{

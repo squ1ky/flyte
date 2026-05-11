@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/squ1ky/flyte/internal/booking/config"
 	"github.com/squ1ky/flyte/internal/booking/domain"
-	flightclient "github.com/squ1ky/flyte/internal/booking/infrastructure/clients/grpc/flight"
 	"log/slog"
 	"time"
 )
@@ -13,14 +12,14 @@ const expireBatchSize = 50
 
 type ExpiredBookingCleaner struct {
 	bookings domain.BookingRepository
-	flights  *flightclient.Client
+	flights  FlightClient
 	interval time.Duration
 	logger   *slog.Logger
 }
 
 func NewExpiredBookingCleaner(
 	bookings domain.BookingRepository,
-	flights *flightclient.Client,
+	flights FlightClient,
 	cfg config.CleanerConfig,
 	log *slog.Logger,
 ) *ExpiredBookingCleaner {

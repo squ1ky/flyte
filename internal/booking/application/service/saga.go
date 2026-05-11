@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/squ1ky/flyte/internal/booking/config"
 	"github.com/squ1ky/flyte/internal/booking/domain"
-	flightclient "github.com/squ1ky/flyte/internal/booking/infrastructure/clients/grpc/flight"
 	"github.com/squ1ky/flyte/internal/booking/infrastructure/outbox"
 	"log/slog"
 	"math/big"
@@ -70,7 +69,7 @@ type BookingSaga struct {
 	bookings   domain.BookingRepository
 	tickets    domain.TicketRepository
 	outbox     outbox.Repository
-	flights    *flightclient.Client
+	flights    FlightClient
 	bookingTTL time.Duration
 	logger     *slog.Logger
 }
@@ -79,7 +78,7 @@ func NewBookingSaga(
 	bookings domain.BookingRepository,
 	tickets domain.TicketRepository,
 	outbox outbox.Repository,
-	flights *flightclient.Client,
+	flights FlightClient,
 	cfg config.CleanerConfig,
 	logger *slog.Logger,
 ) *BookingSaga {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/squ1ky/flyte/internal/booking/domain"
-	flightclient "github.com/squ1ky/flyte/internal/booking/infrastructure/clients/grpc/flight"
 	"log/slog"
 	"math/rand"
 )
@@ -12,14 +11,14 @@ import (
 type PaymentHandler struct {
 	bookings domain.BookingRepository
 	tickets  domain.TicketRepository
-	flights  *flightclient.Client
+	flights  FlightClient
 	logger   *slog.Logger
 }
 
 func NewPaymentHandler(
 	bookings domain.BookingRepository,
 	tickets domain.TicketRepository,
-	flights *flightclient.Client,
+	flights FlightClient,
 	logger *slog.Logger,
 ) *PaymentHandler {
 	return &PaymentHandler{

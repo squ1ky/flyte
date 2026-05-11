@@ -20,7 +20,8 @@ func (r *TicketRepo) ListByBookingID(ctx context.Context, bookingID string) ([]d
 
 	const query = `
 		SELECT id, booking_id, passenger_first_name, passenger_last_name,
-			   passenger_doc_num, seat_number, price_cents, ticket_number, status
+			   passenger_doc_num, seat_number, price_cents,
+			   COALESCE(ticket_number, '') AS ticket_number, status
 		FROM tickets
 		WHERE booking_id = $1
 	`

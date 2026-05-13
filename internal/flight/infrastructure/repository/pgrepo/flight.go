@@ -50,8 +50,24 @@ func (r *FlightRepo) Create(ctx context.Context, flight *domain.Flight, fares []
 	}
 
 	if len(fares) > 0 {
+		var seatCounts []struct {
+			SeatClass string `db:"seat_class"`
+			Count     int    `db:"count"`
+		}
+		if err := tx.SelectContext(ctx, &seatCounts,
+			`SELECT seat_class, COUNT(*) as count FROM aircraft_seats WHERE aircraft_id = $1 GROUP BY seat_class`,
+			flight.AircraftID,
+		); err != nil {
+			return 0, fmt.Errorf("query seat counts: %w", err)
+		}
+		countByClass := make(map[string]int, len(seatCounts))
+		for _, sc := range seatCounts {
+			countByClass[sc.SeatClass] = sc.Count
+		}
+
 		for i := range fares {
 			fares[i].FlightID = flightID
+			fares[i].SeatsTotal = countByClass[string(fares[i].SeatClass)]
 		}
 		queryFares := `
 			INSERT INTO flight_fares (flight_id, seat_class, price_cents, seats_total, seats_booked)

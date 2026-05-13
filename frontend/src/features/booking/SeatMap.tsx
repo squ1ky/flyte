@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query'
-import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { getAircraftSeats } from '@/api/endpoints/flight'
 import { formatPrice } from '@/lib/format'
@@ -11,7 +10,6 @@ interface Props {
   reservedSeats?: string[]
   selected: string[]
   onChange: (seats: string[]) => void
-  maxSeats: number
 }
 
 const CLASS_COLORS: Record<SeatClass, string> = {
@@ -32,7 +30,7 @@ const CLASS_LABELS: Record<SeatClass, string> = {
   first: 'Первый',
 }
 
-export function SeatMap({ aircraftId, fares, reservedSeats = [], selected, onChange, maxSeats }: Props) {
+export function SeatMap({ aircraftId, fares, reservedSeats = [], selected, onChange }: Props) {
   const { data: seats = [], isLoading } = useQuery({
     queryKey: ['aircraft', aircraftId, 'seats'],
     queryFn: () => getAircraftSeats(aircraftId),
@@ -56,10 +54,8 @@ export function SeatMap({ aircraftId, fares, reservedSeats = [], selected, onCha
     if (reservedSeats.includes(seat.seat_number)) return
     if (selected.includes(seat.seat_number)) {
       onChange(selected.filter(s => s !== seat.seat_number))
-    } else if (selected.length < maxSeats) {
-      onChange([...selected, seat.seat_number])
     } else {
-      toast.error(`Можно выбрать не более ${maxSeats} мест`)
+      onChange([...selected, seat.seat_number])
     }
   }
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, useFieldArray, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -76,12 +76,10 @@ function FlightSummary({ flight }: { flight: FlightResponse }) {
 
 export function BookingPage() {
   const { flightId } = useParams<{ flightId: string }>()
-  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { userId, email } = useAuthStore()
 
-  const maxSeats = Math.max(1, Number(searchParams.get('passengers') ?? 1))
   const [selectedSeats, setSelectedSeats] = useState<string[]>([])
 
   const form = useForm<FormValues>({
@@ -195,9 +193,11 @@ export function BookingPage() {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">
           Выбор мест{' '}
-          <span className="text-sm font-normal text-muted-foreground">
-            (выбрано {selectedSeats.length} из {maxSeats})
-          </span>
+          {selectedSeats.length > 0 && (
+            <span className="text-sm font-normal text-muted-foreground">
+              (выбрано {selectedSeats.length})
+            </span>
+          )}
         </h2>
         <SeatMap
           aircraftId={flight.aircraft.id}
@@ -205,7 +205,6 @@ export function BookingPage() {
           reservedSeats={reservedSeats}
           selected={selectedSeats}
           onChange={handleSeatsChange}
-          maxSeats={maxSeats}
         />
       </section>
 

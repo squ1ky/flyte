@@ -40,12 +40,12 @@ func TestOutboxRelay_Poll(t *testing.T) {
 	}
 
 	cases := []struct {
-		name           string
-		fetchResult    []outbox.Event
-		fetchErr       error
-		sendErr        error
-		markSentErr    error
-		wantSentCount  int
+		name            string
+		fetchResult     []outbox.Event
+		fetchErr        error
+		sendErr         error
+		markSentErr     error
+		wantSentCount   int
 		wantMarkedCount int
 	}{
 		{

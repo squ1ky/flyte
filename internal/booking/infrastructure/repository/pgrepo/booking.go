@@ -5,9 +5,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/squ1ky/flyte/internal/booking/domain"
-	"time"
 )
 
 type BookingRepo struct {
@@ -57,7 +58,7 @@ func (r *BookingRepo) GetByID(ctx context.Context, id string) (*domain.Booking, 
 
 	const query = `
 		SELECT id, user_id, flight_id, ref_code, status,
-			   total_price_cents, currency, contact_email, expires_at, created_at
+			   total_price_cents, currency, contact_email, expires_at, created_at, cancel_reason
 		FROM bookings
 		WHERE id = $1
 	`
@@ -76,7 +77,7 @@ func (r *BookingRepo) GetByRefCode(ctx context.Context, refCode string) (*domain
 
 	const query = `
 		SELECT id, user_id, flight_id, ref_code, status,
-			   total_price_cents, currency, contact_email, expires_at, created_at
+			   total_price_cents, currency, contact_email, expires_at, created_at, cancel_reason
 		FROM bookings
 		WHERE ref_code = $1
 	`
@@ -95,7 +96,7 @@ func (r *BookingRepo) ListByUserID(ctx context.Context, userID int64, limit, off
 
 	const query = `
 		SELECT id, user_id, flight_id, ref_code, status,
-			   total_price_cents, currency, contact_email, expires_at, created_at
+			   total_price_cents, currency, contact_email, expires_at, created_at, cancel_reason
 		FROM bookings
 		WHERE user_id = $1
 		ORDER BY created_at DESC
@@ -108,14 +109,20 @@ func (r *BookingRepo) ListByUserID(ctx context.Context, userID int64, limit, off
 	return bookings, nil
 }
 
-func (r *BookingRepo) UpdateStatus(ctx context.Context, id string, status domain.BookingStatus) error {
+func (r *BookingRepo) UpdateStatus(ctx context.Context, id string, status domain.BookingStatus, reason *domain.CancelReason) error {
 	const query = `
 		UPDATE bookings
-		SET status = $1
-		WHERE id = $2
+		SET status = $1, cancel_reason = $2
+		WHERE id = $3
 	`
 
-	res, err := r.db.ExecContext(ctx, query, status, id)
+	var reasonValue *string
+	if reason != nil {
+		s := string(*reason)
+		reasonValue = &s
+	}
+
+	res, err := r.db.ExecContext(ctx, query, status, reasonValue, id)
 	if err != nil {
 		return fmt.Errorf("update booking status: %w", err)
 	}
@@ -131,7 +138,7 @@ func (r *BookingRepo) FindExpired(ctx context.Context, limit int) ([]domain.Book
 
 	const query = `
 		SELECT id, user_id, flight_id, ref_code, status,
-			   total_price_cents, currency, contact_email, expires_at, created_at
+			   total_price_cents, currency, contact_email, expires_at, created_at, cancel_reason
 		FROM bookings
 		WHERE status = 'PENDING' AND expires_at < $1
 		LIMIT $2

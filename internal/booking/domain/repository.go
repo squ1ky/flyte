@@ -15,8 +15,9 @@ type BookingRepository interface {
 	// ListByUserID returns a user's bookings (without tickets).
 	ListByUserID(ctx context.Context, userID int64, limit, offset int) ([]Booking, error)
 
-	// UpdateStatus changes the booking status.
-	UpdateStatus(ctx context.Context, id string, status BookingStatus) error
+	// UpdateStatus changes the booking status. reason is optional and only
+	// meaningful when status is BookingStatusCancelled.
+	UpdateStatus(ctx context.Context, id string, status BookingStatus, reason *CancelReason) error
 
 	// FindExpired returns Pending bookings with an expired expires_at
 	FindExpired(ctx context.Context, limit int) ([]Booking, error)

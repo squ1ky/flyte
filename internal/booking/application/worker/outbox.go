@@ -3,33 +3,38 @@ package worker
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"log/slog"
+	"time"
+
 	"github.com/squ1ky/flyte/internal/booking/config"
 	"github.com/squ1ky/flyte/internal/booking/domain"
 	"github.com/squ1ky/flyte/internal/booking/infrastructure/outbox"
-	"log/slog"
-	"time"
 )
 
 const outboxBatchSize = 50
 
 type OutboxRelay struct {
-	outbox   outbox.Repository
-	producer PaymentProducer
-	interval time.Duration
-	logger   *slog.Logger
+	outbox                outbox.Repository
+	paymentProducer       PaymentProducer
+	bookingEventsProducer BookingEventsProducer
+	interval              time.Duration
+	logger                *slog.Logger
 }
 
 func NewOutboxRelay(
 	outbox outbox.Repository,
-	producer PaymentProducer,
+	paymentProducer PaymentProducer,
+	bookingEventsProducer BookingEventsProducer,
 	cfg config.OutboxConfig,
 	log *slog.Logger,
 ) *OutboxRelay {
 	return &OutboxRelay{
-		outbox:   outbox,
-		producer: producer,
-		interval: cfg.Interval,
-		logger:   log,
+		outbox:                outbox,
+		paymentProducer:       paymentProducer,
+		bookingEventsProducer: bookingEventsProducer,
+		interval:              cfg.Interval,
+		logger:                log,
 	}
 }
 
@@ -80,9 +85,35 @@ func (r *OutboxRelay) poll(ctx context.Context) {
 }
 
 func (r *OutboxRelay) processEvent(ctx context.Context, event outbox.Event) error {
-	var paymentReq domain.PaymentRequestEvent
-	if err := json.Unmarshal(event.Payload, &paymentReq); err != nil {
-		return err
+	switch event.EventType {
+	case outbox.EventPaymentRequest:
+		var paymentReq domain.PaymentRequestEvent
+		if err := json.Unmarshal(event.Payload, &paymentReq); err != nil {
+			return err
+		}
+		return r.paymentProducer.SendPaymentRequest(ctx, paymentReq)
+
+	case outbox.EventBookingCreated, outbox.EventBookingPaid, outbox.EventBookingCancelled:
+		bookingID, err := extractBookingID(event.Payload)
+		if err != nil {
+			return fmt.Errorf("extract booking_id: %w", err)
+		}
+		return r.bookingEventsProducer.SendBookingEvent(ctx, bookingID, event.EventType, event.Payload)
+
+	default:
+		return fmt.Errorf("unknown outbox event type: %s", event.EventType)
 	}
-	return r.producer.SendPaymentRequest(ctx, paymentReq)
+}
+
+func extractBookingID(payload []byte) (string, error) {
+	var partial struct {
+		BookingID string `json:"booking_id"`
+	}
+	if err := json.Unmarshal(payload, &partial); err != nil {
+		return "", err
+	}
+	if partial.BookingID == "" {
+		return "", fmt.Errorf("booking_id is empty")
+	}
+	return partial.BookingID, nil
 }

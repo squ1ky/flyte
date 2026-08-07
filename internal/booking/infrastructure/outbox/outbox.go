@@ -8,7 +8,10 @@ import (
 type EventType string
 
 const (
-	EventPaymentRequest EventType = "payment_request"
+	EventPaymentRequest   EventType = "payment_request"
+	EventBookingCreated   EventType = "booking_created"
+	EventBookingPaid      EventType = "booking_paid"
+	EventBookingCancelled EventType = "booking_cancelled"
 )
 
 type Status string

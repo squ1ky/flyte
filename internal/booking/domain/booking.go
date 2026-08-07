@@ -10,6 +10,14 @@ const (
 	BookingStatusCancelled BookingStatus = "CANCELLED"
 )
 
+type CancelReason string
+
+const (
+	CancelReasonUserCancelled CancelReason = "user_cancelled"
+	CancelReasonPaymentFailed CancelReason = "payment_failed"
+	CancelReasonExpired       CancelReason = "expired"
+)
+
 type Booking struct {
 	ID              string        `db:"id"`
 	UserID          int64         `db:"user_id"`
@@ -21,6 +29,7 @@ type Booking struct {
 	ContactEmail    string        `db:"contact_email"`
 	ExpiresAt       time.Time     `db:"expires_at"`
 	CreatedAt       time.Time     `db:"created_at"`
+	CancelReason    *string       `db:"cancel_reason"`
 
 	Tickets []Ticket `db:"-"`
 }

@@ -3,17 +3,6 @@ package application
 import (
 	"context"
 	"fmt"
-	"github.com/jmoiron/sqlx"
-	pb "github.com/squ1ky/flyte/gen/proto/booking"
-	"github.com/squ1ky/flyte/internal/booking/application/service"
-	"github.com/squ1ky/flyte/internal/booking/application/worker"
-	"github.com/squ1ky/flyte/internal/booking/config"
-	flightclient "github.com/squ1ky/flyte/internal/booking/infrastructure/clients/grpc/flight"
-	paymentmq "github.com/squ1ky/flyte/internal/booking/infrastructure/kafka/payment"
-	"github.com/squ1ky/flyte/internal/booking/infrastructure/repository/pgrepo"
-	grpcserver "github.com/squ1ky/flyte/internal/booking/infrastructure/transport/grpc"
-	"github.com/squ1ky/flyte/pkg/db"
-	"google.golang.org/grpc"
 	"log/slog"
 	"net"
 	"os"
@@ -21,6 +10,19 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/jmoiron/sqlx"
+	pb "github.com/squ1ky/flyte/gen/proto/booking"
+	"github.com/squ1ky/flyte/internal/booking/application/service"
+	"github.com/squ1ky/flyte/internal/booking/application/worker"
+	"github.com/squ1ky/flyte/internal/booking/config"
+	flightclient "github.com/squ1ky/flyte/internal/booking/infrastructure/clients/grpc/flight"
+	bookingeventsmq "github.com/squ1ky/flyte/internal/booking/infrastructure/kafka/bookingevents"
+	paymentmq "github.com/squ1ky/flyte/internal/booking/infrastructure/kafka/payment"
+	"github.com/squ1ky/flyte/internal/booking/infrastructure/repository/pgrepo"
+	grpcserver "github.com/squ1ky/flyte/internal/booking/infrastructure/transport/grpc"
+	"github.com/squ1ky/flyte/pkg/db"
+	"google.golang.org/grpc"
 )
 
 const migrationsPath = "migrations/booking"
@@ -30,14 +32,15 @@ type Worker interface {
 }
 
 type App struct {
-	cfg             *config.Config
-	logger          *slog.Logger
-	db              *sqlx.DB
-	grpcServer      *grpc.Server
-	paymentConsumer *paymentmq.Consumer
-	paymentProducer *paymentmq.Producer
-	flights         *flightclient.Client
-	workers         []Worker
+	cfg                   *config.Config
+	logger                *slog.Logger
+	db                    *sqlx.DB
+	grpcServer            *grpc.Server
+	paymentConsumer       *paymentmq.Consumer
+	paymentProducer       *paymentmq.Producer
+	bookingEventsProducer *bookingeventsmq.Producer
+	flights               *flightclient.Client
+	workers               []Worker
 }
 
 func New(cfg *config.Config, logger *slog.Logger) (*App, error) {
@@ -70,19 +73,20 @@ func New(cfg *config.Config, logger *slog.Logger) (*App, error) {
 		return nil, fmt.Errorf("flight client: %w", err)
 	}
 
+	paymentProducer := paymentmq.NewProducer(cfg.Kafka, logger)
+	bookingEventsProducer := bookingeventsmq.NewProducer(cfg.Kafka, logger)
+
 	// Services
 	saga := service.NewBookingSaga(bookingRepo, ticketRepo, outboxRepo, flights, cfg.Cleaner, logger)
 	queryService := service.NewBookingQueryService(bookingRepo, ticketRepo, logger)
-	cancelService := service.NewCancelService(bookingRepo, flights, logger)
-	paymentHandler := service.NewPaymentHandler(bookingRepo, ticketRepo, flights, logger)
+	cancelService := service.NewCancelService(bookingRepo, flights, outboxRepo, logger)
+	paymentHandler := service.NewPaymentHandler(bookingRepo, ticketRepo, flights, outboxRepo, logger)
 
-	// Kafka
-	paymentProducer := paymentmq.NewProducer(cfg.Kafka, logger)
 	paymentConsumer := paymentmq.NewConsumer(cfg.Kafka, paymentHandler, logger)
 
 	// Workers
-	outboxRelay := worker.NewOutboxRelay(outboxRepo, paymentProducer, cfg.Outbox, logger)
-	expireWorker := worker.NewExpiredBookingCleaner(bookingRepo, flights, cfg.Cleaner, logger)
+	outboxRelay := worker.NewOutboxRelay(outboxRepo, paymentProducer, bookingEventsProducer, cfg.Outbox, logger)
+	expireWorker := worker.NewExpiredBookingCleaner(bookingRepo, flights, outboxRepo, cfg.Cleaner, logger)
 
 	// gRPC server
 	srv := grpc.NewServer()
@@ -90,14 +94,15 @@ func New(cfg *config.Config, logger *slog.Logger) (*App, error) {
 	pb.RegisterBookingServiceServer(srv, handler)
 
 	return &App{
-		cfg:             cfg,
-		logger:          logger,
-		db:              database,
-		grpcServer:      srv,
-		paymentConsumer: paymentConsumer,
-		paymentProducer: paymentProducer,
-		flights:         flights,
-		workers:         []Worker{outboxRelay, expireWorker},
+		cfg:                   cfg,
+		logger:                logger,
+		db:                    database,
+		grpcServer:            srv,
+		paymentConsumer:       paymentConsumer,
+		paymentProducer:       paymentProducer,
+		bookingEventsProducer: bookingEventsProducer,
+		flights:               flights,
+		workers:               []Worker{outboxRelay, expireWorker},
 	}, nil
 }
 
@@ -173,6 +178,11 @@ func (a *App) shutdown(ctx context.Context, wg *sync.WaitGroup) {
 	}
 	if err := a.paymentProducer.Close(); err != nil {
 		a.logger.ErrorContext(ctx, "close payment producer",
+			slog.Any("error", err),
+		)
+	}
+	if err := a.bookingEventsProducer.Close(); err != nil {
+		a.logger.ErrorContext(ctx, "close booking events producer",
 			slog.Any("error", err),
 		)
 	}

@@ -160,7 +160,7 @@ func TestBookingRepo_UpdateStatus(t *testing.T) {
 	b := newBooking(1, "UPD001", domain.BookingStatusPending, time.Now().Add(15*time.Minute))
 	require.NoError(t, repo.Create(ctx, b, nil))
 
-	require.NoError(t, repo.UpdateStatus(ctx, b.ID, domain.BookingStatusPaid))
+	require.NoError(t, repo.UpdateStatus(ctx, b.ID, domain.BookingStatusPaid, nil))
 
 	got, err := repo.GetByID(ctx, b.ID)
 	require.NoError(t, err)
@@ -172,7 +172,7 @@ func TestBookingRepo_UpdateStatus_NotFound(t *testing.T) {
 	ctx := context.Background()
 	repo := pgrepo.NewBookingRepo(testDB)
 
-	err := repo.UpdateStatus(ctx, uuid.NewString(), domain.BookingStatusPaid)
+	err := repo.UpdateStatus(ctx, uuid.NewString(), domain.BookingStatusPaid, nil)
 	assert.ErrorIs(t, err, domain.ErrBookingNotFound)
 }
 

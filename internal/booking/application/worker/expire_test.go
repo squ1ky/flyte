@@ -25,12 +25,12 @@ func TestExpiredBookingCleaner_ExpireBatch(t *testing.T) {
 	}
 
 	cases := []struct {
-		name            string
+		name              string
 		findExpiredResult []domain.Booking
-		findExpiredErr  error
-		updateStatusErr error
-		cancelReservErr error
-		wantCancelled   int
+		findExpiredErr    error
+		updateStatusErr   error
+		cancelReservErr   error
+		wantCancelled     int
 	}{
 		{
 			name:              "empty batch does nothing",

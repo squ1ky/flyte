@@ -5,13 +5,14 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"log/slog"
+	"math/big"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/squ1ky/flyte/internal/booking/config"
 	"github.com/squ1ky/flyte/internal/booking/domain"
 	"github.com/squ1ky/flyte/internal/booking/infrastructure/outbox"
-	"log/slog"
-	"math/big"
-	"time"
 )
 
 const (
@@ -141,6 +142,12 @@ func (s *BookingSaga) CreateBooking(ctx context.Context, input CreateBookingInpu
 		return nil, fmt.Errorf("save booking: %w", err)
 	}
 
+	if err := s.publishBookingCreated(ctx, booking); err != nil {
+		log.ErrorContext(ctx, "publish booking created event failed",
+			slog.Any("error", err),
+		)
+	}
+
 	if err := s.enqueuePayment(ctx, booking); err != nil {
 		return nil, fmt.Errorf("enqueue payment: %w", err)
 	}
@@ -229,6 +236,30 @@ func (s *BookingSaga) enqueuePayment(ctx context.Context, booking *domain.Bookin
 	return s.outbox.Insert(ctx, outbox.Event{
 		ID:        uuid.New().String(),
 		EventType: outbox.EventPaymentRequest,
+		Payload:   payload,
+		Status:    outbox.StatusPending,
+		CreatedAt: time.Now(),
+	})
+}
+
+func (s *BookingSaga) publishBookingCreated(ctx context.Context, booking *domain.Booking) error {
+	event := domain.BookingCreatedEvent{
+		BookingID:       booking.ID,
+		UserID:          booking.UserID,
+		FlightID:        booking.FlightID,
+		TotalPriceCents: booking.TotalPriceCents,
+		Currency:        booking.Currency,
+		CreatedAt:       booking.CreatedAt,
+	}
+
+	payload, err := json.Marshal(event)
+	if err != nil {
+		return fmt.Errorf("marshal booking created event: %w", err)
+	}
+
+	return s.outbox.Insert(ctx, outbox.Event{
+		ID:        uuid.New().String(),
+		EventType: outbox.EventBookingCreated,
 		Payload:   payload,
 		Status:    outbox.StatusPending,
 		CreatedAt: time.Now(),

@@ -2,8 +2,9 @@ package config
 
 import (
 	"fmt"
-	"github.com/ilyakaznacheev/cleanenv"
 	"time"
+
+	"github.com/ilyakaznacheev/cleanenv"
 )
 
 type Config struct {
@@ -32,10 +33,11 @@ type DBConfig struct {
 }
 
 type KafkaConfig struct {
-	Brokers       []string `env:"KAFKA_BROKERS" env-default:"localhost:9092"`
-	TopicRequests string   `env:"KAFKA_TOPIC_PAYMENT_REQUESTS" env-default:"payment_requests"`
-	TopicResults  string   `env:"KAFKA_TOPIC_PAYMENT_RESULTS" env-default:"payment_results"`
-	GroupID       string   `env:"BOOKING_KAFKA_GROUP_ID" env-default:"booking_service_group"`
+	Brokers            []string `env:"KAFKA_BROKERS" env-default:"localhost:9092"`
+	TopicRequests      string   `env:"KAFKA_TOPIC_PAYMENT_REQUESTS" env-default:"payment_requests"`
+	TopicResults       string   `env:"KAFKA_TOPIC_PAYMENT_RESULTS" env-default:"payment_results"`
+	TopicBookingEvents string   `env:"KAFKA_TOPIC_BOOKING_EVENTS" env-default:"booking_events"`
+	GroupID            string   `env:"BOOKING_KAFKA_GROUP_ID" env-default:"booking_service_group"`
 }
 
 type FlightServiceConfig struct {

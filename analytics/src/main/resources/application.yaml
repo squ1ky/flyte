@@ -1,3 +1,40 @@
 spring:
   application:
     name: analytics
+
+  r2dbc:
+    url: r2dbc:postgresql://${ANALYTICS_DB_HOST}:${ANALYTICS_DB_PORT}/${ANALYTICS_DB_NAME}
+    username: ${ANALYTICS_DB_USER}
+    password: ${ANALYTICS_DB_PASSWORD}
+
+  datasource:
+    url: jdbc:postgresql://${ANALYTICS_DB_HOST}:${ANALYTICS_DB_PORT}/${ANALYTICS_DB_NAME}
+    username: ${ANALYTICS_DB_USER}
+    password: ${ANALYTICS_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  flyway:
+    url: jdbc:postgresql://${ANALYTICS_DB_HOST}:${ANALYTICS_DB_PORT}/${ANALYTICS_DB_NAME}
+    user: ${ANALYTICS_DB_USER}
+    password: ${ANALYTICS_DB_PASSWORD}
+    locations: classpath:db/migration
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BROKERS}
+    consumer:
+      group-id: ${ANALYTICS_KAFKA_GROUP_ID}
+      auto-offset-reset: earliest
+
+flyte:
+  kafka:
+    topics:
+      booking-events: ${KAFKA_TOPIC_BOOKING_EVENTS:booking_events}
+
+server:
+  port: ${ANALYTICS_HTTP_PORT}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

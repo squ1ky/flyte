@@ -71,6 +71,27 @@ services:
       timeout: 5s
       retries: 5
 
+  analytics-db:
+    image: postgres:15-alpine
+    container_name: analytics-db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${ANALYTICS_DB_USER}
+      POSTGRES_PASSWORD: ${ANALYTICS_DB_PASSWORD}
+      POSTGRES_DB: ${ANALYTICS_DB_NAME}
+    networks:
+      - flyte-network
+    ports:
+      - "${ANALYTICS_DB_PORT_EXTERNAL}:5432"
+    volumes:
+      - analytics_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${ANALYTICS_DB_USER} -d ${ANALYTICS_DB_NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
     container_name: elasticsearch
@@ -217,6 +238,23 @@ services:
     ports:
       - "${BOOKING_GRPC_PORT}:${BOOKING_GRPC_PORT}"
 
+  analytics-service:
+    build:
+      context: ./analytics
+      dockerfile: ../deploy/analytics.Dockerfile
+    container_name: analytics-service
+    env_file:
+      - .env
+    networks:
+      - flyte-network
+    depends_on:
+      analytics-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "${ANALYTICS_HTTP_PORT}:${ANALYTICS_HTTP_PORT}"
+
   frontend:
     build:
       context: .
@@ -237,6 +275,7 @@ volumes:
   flight_pg_data:
   payment_pg_data:
   booking_pg_data:
+  analytics_pg_data:
   es_data:
 
 networks:

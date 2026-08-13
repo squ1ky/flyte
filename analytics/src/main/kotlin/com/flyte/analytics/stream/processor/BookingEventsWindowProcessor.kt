@@ -16,7 +16,6 @@ import org.apache.kafka.streams.processor.api.ProcessorContext
 import org.apache.kafka.streams.processor.api.Record
 import org.apache.kafka.streams.state.KeyValueStore
 import java.time.Duration
-import java.time.Instant
 
 class BookingEventsWindowProcessor(
     private val windowSize: Duration,

@@ -1,6 +1,7 @@
 package com.flyte.analytics.stream.processor
 
 import com.flyte.analytics.stream.StreamStoreNames
+import com.flyte.analytics.stream.WindowMath
 import com.flyte.analytics.stream.model.db.BookingStatus
 import com.flyte.analytics.stream.model.db.BookingWindowState
 import com.flyte.analytics.stream.model.kafka.BookingCancelledPayload
@@ -47,7 +48,7 @@ class BookingEventsWindowProcessor(
             return
         }
 
-        val windowStart = truncateToWindow(payload.createdAt)
+        val windowStart = WindowMath.truncateToWindow(payload.createdAt, windowSizeSeconds)
         store.put(envelope.bookingId, BookingWindowState(envelope.bookingId, windowStart, BookingStatus.PENDING))
         metricsWindowsRepository.incrementCreated(windowStart, windowSizeSeconds)
     }
@@ -75,11 +76,5 @@ class BookingEventsWindowProcessor(
 
         store.put(envelope.bookingId, state.copy(status = BookingStatus.CANCELLED, cancelReason = payload.reason))
         metricsWindowsRepository.incrementCancelled(state.windowStart, windowSizeSeconds, payload.reason)
-    }
-
-    private fun truncateToWindow(instant: Instant): Instant {
-        val epochSecond = instant.epochSecond
-        val truncated = epochSecond - (epochSecond % windowSizeSeconds)
-        return Instant.ofEpochSecond(truncated)
     }
 }

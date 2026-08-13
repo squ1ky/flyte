@@ -36,6 +36,8 @@ flyte:
     consumer:
       booking-events:
         topic: ${KAFKA_TOPIC_BOOKING_EVENTS}
+      payment-results:
+        topic: ${KAFKA_TOPIC_PAYMENT_RESULTS}
 
 server:
   port: ${ANALYTICS_HTTP_PORT}

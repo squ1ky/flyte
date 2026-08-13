@@ -1,4 +1,4 @@
-package com.flyte.analytics.stream.model
+package com.flyte.analytics.stream.model.kafka
 
 import tools.jackson.databind.PropertyNamingStrategies
 import tools.jackson.databind.annotation.JsonNaming

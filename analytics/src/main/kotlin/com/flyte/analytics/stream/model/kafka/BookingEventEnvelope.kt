@@ -1,4 +1,4 @@
-package com.flyte.analytics.stream.model
+package com.flyte.analytics.stream.model.kafka
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo

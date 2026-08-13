@@ -24,11 +24,18 @@ spring:
     consumer:
       group-id: ${ANALYTICS_KAFKA_GROUP_ID}
       auto-offset-reset: earliest
+    streams:
+      application-id: analytics-service-streams
+      properties:
+        deserialization.exception.handler: com.flyte.analytics.stream.config.SkipOnDeserializationErrorHandler
 
 flyte:
+  analytics:
+    window-size: 60s
   kafka:
-    topics:
-      booking-events: ${KAFKA_TOPIC_BOOKING_EVENTS:booking_events}
+    consumer:
+      booking-events:
+        topic: ${KAFKA_TOPIC_BOOKING_EVENTS}
 
 server:
   port: ${ANALYTICS_HTTP_PORT}

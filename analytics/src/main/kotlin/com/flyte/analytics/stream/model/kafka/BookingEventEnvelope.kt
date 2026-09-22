@@ -1,24 +1,38 @@
 package com.flyte.analytics.stream.model.kafka
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import tools.jackson.databind.PropertyNamingStrategies
-import tools.jackson.databind.annotation.JsonNaming
+import tools.jackson.core.JsonParser
+import tools.jackson.databind.DeserializationContext
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.annotation.JsonDeserialize
+import tools.jackson.databind.deser.std.StdDeserializer
 
-@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
+@JsonDeserialize(using = BookingEventEnvelopeDeserializer::class)
 data class BookingEventEnvelope(
     val bookingId: String,
     val eventType: BookingEventType,
-
-    @JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.EXTERNAL_PROPERTY,
-        property = "event_type"
-    )
-    @JsonSubTypes(
-        JsonSubTypes.Type(value = BookingCreatedPayload::class, name = "booking_created"),
-        JsonSubTypes.Type(value = BookingPaidPayload::class, name = "booking_paid"),
-        JsonSubTypes.Type(value = BookingCancelledPayload::class, name = "booking_cancelled"),
-    )
     val payload: BookingEventPayload
 )
+
+class BookingEventEnvelopeDeserializer :
+    StdDeserializer<BookingEventEnvelope>(BookingEventEnvelope::class.java) {
+
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): BookingEventEnvelope {
+        val node: JsonNode = ctxt.readTree(p)
+
+        val bookingId = node.get("booking_id")?.asString()
+            ?: throw IllegalArgumentException("Missing 'booking_id' field in BookingEventEnvelope")
+        val eventTypeRaw = node.get("event_type")?.asString()
+            ?: throw IllegalArgumentException("Missing 'event_type' field in BookingEventEnvelope")
+        val eventType = BookingEventType.valueOf(eventTypeRaw.uppercase())
+        val payloadNode = node.get("payload")
+            ?: throw IllegalArgumentException("Missing 'payload' field in BookingEventEnvelope")
+
+        val payload: BookingEventPayload = when (eventType) {
+            BookingEventType.BOOKING_CREATED -> ctxt.readTreeAsValue(payloadNode, BookingCreatedPayload::class.java)
+            BookingEventType.BOOKING_PAID -> ctxt.readTreeAsValue(payloadNode, BookingPaidPayload::class.java)
+            BookingEventType.BOOKING_CANCELLED -> ctxt.readTreeAsValue(payloadNode, BookingCancelledPayload::class.java)
+        }
+
+        return BookingEventEnvelope(bookingId, eventType, payload)
+    }
+}

@@ -1,4 +1,4 @@
-package com.flyte.analytics.stream.config
+package com.flyte.analytics.stream.config.kafka
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.context.annotation.Bean

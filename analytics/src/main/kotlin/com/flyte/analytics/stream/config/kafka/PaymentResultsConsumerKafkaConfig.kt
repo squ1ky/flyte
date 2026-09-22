@@ -1,4 +1,4 @@
-package com.flyte.analytics.stream.config
+package com.flyte.analytics.stream.config.kafka
 
 import com.flyte.analytics.stream.config.properties.PaymentResultsConsumerKafkaProperties
 import com.flyte.analytics.stream.model.kafka.PaymentResult
@@ -12,6 +12,7 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory
 import org.springframework.kafka.core.ConsumerFactory
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
 import org.springframework.kafka.listener.DefaultErrorHandler
+import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer
 
 @Configuration
@@ -23,8 +24,9 @@ class PaymentResultsConsumerKafkaConfig(
 
     @Bean
     fun paymentResultConsumerFactory(): ConsumerFactory<String, PaymentResult> {
-        val valueDeserializer = JacksonJsonDeserializer(PaymentResult::class.java)
+        val delegate = JacksonJsonDeserializer(PaymentResult::class.java)
             .also { it.setUseTypeHeaders(false) }
+        val valueDeserializer = ErrorHandlingDeserializer(delegate)
 
         return DefaultKafkaConsumerFactory(
             kafkaProperties.buildConsumerProperties(),

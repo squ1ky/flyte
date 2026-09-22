@@ -27,11 +27,25 @@ spring:
     streams:
       application-id: analytics-service-streams
       properties:
-        deserialization.exception.handler: com.flyte.analytics.stream.config.SkipOnDeserializationErrorHandler
+        deserialization.exception.handler: com.flyte.analytics.stream.config.kafka.SkipOnDeserializationErrorHandler
 
 flyte:
   analytics:
     window-size: 60s
+    anomaly:
+      cusum:
+        payment_success_rate:
+          baseline: 0.80
+          threshold: 5.0
+          drift: 0.01
+        conversion_rate:
+          baseline: 0.80
+          threshold: 5.0
+          drift: 0.02
+        abandonment_rate_expired:
+          baseline: 0.0
+          threshold: 3.0
+          drift: 0.01
   kafka:
     consumer:
       booking-events:

@@ -270,6 +270,26 @@ services:
       - ./frontend:/app
       - /app/node_modules
 
+  grafana:
+    image: grafana/grafana:11.3.0
+    container_name: grafana
+    env_file:
+      - .env
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+    networks:
+      - flyte-network
+    depends_on:
+      analytics-db:
+        condition: service_healthy
+    ports:
+      - "${GRAFANA_PORT}:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./analytics/grafana/provisioning:/etc/grafana/provisioning
+      - ./analytics/grafana/dashboards:/var/lib/grafana/dashboards
+
 volumes:
   user_pg_data:
   flight_pg_data:
@@ -277,6 +297,7 @@ volumes:
   booking_pg_data:
   analytics_pg_data:
   es_data:
+  grafana_data:
 
 networks:
   flyte-network:

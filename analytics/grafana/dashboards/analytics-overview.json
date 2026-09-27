@@ -1,0 +1,139 @@
+{
+  "title": "Flyte Analytics — Streaming Metrics & Anomalies",
+  "uid": "flyte-analytics-overview",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "5s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "templating": {
+    "list": [
+      {
+        "name": "window_size_seconds",
+        "type": "custom",
+        "label": "Window size (s)",
+        "query": "60",
+        "current": {
+          "text": "60",
+          "value": "60"
+        },
+        "options": [
+          {
+            "text": "60",
+            "value": "60",
+            "selected": true
+          }
+        ]
+      }
+    ]
+  },
+  "annotations": {
+    "list": [
+      {
+        "name": "Anomalies",
+        "enable": true,
+        "iconColor": "red",
+        "datasource": {
+          "type": "postgres",
+          "uid": "analyticsdb"
+        },
+        "target": {
+          "rawSql": "SELECT detected_at AS time, metric_name || ' (' || algorithm || ', score=' || round(score::numeric, 2) || ')' AS text FROM anomalies WHERE $__timeFilter(detected_at) ORDER BY detected_at",
+          "format": "table"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Conversion rate",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "datasource": { "type": "postgres", "uid": "analyticsdb" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawSql": "SELECT window_start AS \"time\", CASE WHEN created_count = 0 THEN NULL ELSE paid_count::float8 / created_count END AS \"conversion_rate\" FROM metrics_windows WHERE window_size_seconds = $window_size_seconds AND $__timeFilter(window_start) ORDER BY window_start"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Abandonment rate by reason",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "datasource": { "type": "postgres", "uid": "analyticsdb" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawSql": "SELECT window_start AS \"time\", CASE WHEN created_count = 0 THEN NULL ELSE cancelled_expired_count::float8 / created_count END AS \"expired\", CASE WHEN created_count = 0 THEN NULL ELSE cancelled_payment_failed_count::float8 / created_count END AS \"payment_failed\", CASE WHEN created_count = 0 THEN NULL ELSE cancelled_user_cancelled_count::float8 / created_count END AS \"user_cancelled\" FROM metrics_windows WHERE window_size_seconds = $window_size_seconds AND $__timeFilter(window_start) ORDER BY window_start"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Payment error profile",
+      "type": "table",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "postgres", "uid": "analyticsdb" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT error_message, sum(error_count) AS count FROM payment_error_profile WHERE window_size_seconds = $window_size_seconds AND $__timeFilter(window_start) GROUP BY error_message ORDER BY count DESC"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Recent anomalies",
+      "type": "table",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "postgres", "uid": "analyticsdb" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT detected_at AS \"time\", metric_name, algorithm, approach, window_start, score FROM anomalies WHERE $__timeFilter(detected_at) ORDER BY detected_at DESC"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Latest window snapshot (raw counts)",
+      "type": "table",
+      "gridPos": { "x": 0, "y": 16, "w": 24, "h": 6 },
+      "datasource": { "type": "postgres", "uid": "analyticsdb" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT window_start, created_count, paid_count, cancelled_expired_count, cancelled_payment_failed_count, cancelled_user_cancelled_count FROM metrics_windows WHERE window_size_seconds = $window_size_seconds ORDER BY window_start DESC LIMIT 1"
+        }
+      ]
+    }
+  ]
+}

@@ -25,7 +25,7 @@ import org.springframework.kafka.support.serializer.JacksonJsonSerde
 
 @Configuration
 @EnableKafkaStreams
-@EnableConfigurationProperties(AnalyticsWindowProperties::class)
+@EnableConfigurationProperties(AnalyticsWindowProperties::class, BookingEventsConsumerKafkaProperties::class)
 class BookingEventsTopologyConfig(
     private val streamsBuilder: StreamsBuilder,
     private val windowProperties: AnalyticsWindowProperties,

@@ -1,16 +1,20 @@
-package com.flyte.analytics.stream.anomaly
+package com.flyte.analytics.anomaly
 
-import com.flyte.analytics.stream.repository.AnomalyRepository
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
+
+object AnomalyApproach {
+    const val STREAM = "stream"
+    const val BATCH = "batch"
+}
 
 class MetricAnomalyMonitor(
     private val detector: AnomalyDetector,
     private val anomalyRepository: AnomalyRepository,
     private val metricName: String,
     private val algorithm: String,
-    private val approach: String = APPROACH_STREAM,
+    private val approach: String,
 ) {
     private val log = KotlinLogging.logger {}
 
@@ -23,7 +27,7 @@ class MetricAnomalyMonitor(
         if (!latched.compareAndSet(false, true)) return
 
         log.warn {
-            "Anomaly detected: metric=$metricName algorithm=$algorithm " +
+            "Anomaly detected: metric=$metricName algorithm=$algorithm approach=$approach " +
                     "score=${result.score} at=${result.timestamp}"
         }
 
@@ -39,9 +43,5 @@ class MetricAnomalyMonitor(
     fun resetForNewRun() {
         detector.reset()
         latched.set(false)
-    }
-
-    companion object {
-        const val APPROACH_STREAM = "stream"
     }
 }

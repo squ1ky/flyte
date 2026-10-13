@@ -1,6 +1,6 @@
 package com.flyte.analytics.stream.controller
 
-import com.flyte.analytics.stream.anomaly.MetricAnomalyMonitor
+import com.flyte.analytics.anomaly.MetricAnomalyMonitor
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping

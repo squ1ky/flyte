@@ -1,4 +1,4 @@
-package com.flyte.analytics.stream.repository
+package com.flyte.analytics.anomaly
 
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository

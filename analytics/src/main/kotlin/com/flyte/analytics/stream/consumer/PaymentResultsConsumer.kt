@@ -1,8 +1,8 @@
 package com.flyte.analytics.stream.consumer
 
-import com.flyte.analytics.stream.WindowMath
-import com.flyte.analytics.stream.anomaly.MetricAnomalyMonitor
-import com.flyte.analytics.stream.config.properties.AnalyticsWindowProperties
+import com.flyte.analytics.common.WindowMath
+import com.flyte.analytics.anomaly.MetricAnomalyMonitor
+import com.flyte.analytics.common.AnalyticsWindowProperties
 import com.flyte.analytics.stream.model.kafka.PaymentResult
 import com.flyte.analytics.stream.model.kafka.PaymentStatus
 import com.flyte.analytics.stream.repository.PaymentErrorProfileRepository

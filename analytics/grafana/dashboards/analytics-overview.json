@@ -42,7 +42,7 @@
           "uid": "analyticsdb"
         },
         "target": {
-          "rawSql": "SELECT detected_at AS time, metric_name || ' (' || algorithm || ', score=' || round(score::numeric, 2) || ')' AS text FROM anomalies WHERE $__timeFilter(detected_at) ORDER BY detected_at",
+          "rawSql": "SELECT detected_at AS time, metric_name || ' (' || algorithm || '/' || approach || ', score=' || round(score::numeric, 2) || ')' AS text FROM anomalies WHERE $__timeFilter(detected_at) ORDER BY detected_at",
           "format": "table"
         }
       }

@@ -32,6 +32,17 @@ spring:
 flyte:
   analytics:
     window-size: 60s
+    batch:
+      enabled: ${ANALYTICS_BATCH_ENABLED:true}
+      # Typical batch cycle, experiment parameter (CLAUDE.md 6.4).
+      poll-interval: ${ANALYTICS_BATCH_POLL_INTERVAL:60s}
+      # Must cover RESERVATION_TTL + BOOKING_CLEANER_INTERVAL, otherwise expired outcomes
+      # land in windows the batch no longer looks at.
+      lookback: ${ANALYTICS_BATCH_LOOKBACK:30m}
+      booking-db:
+        url: jdbc:postgresql://${BOOKING_DB_HOST}:${BOOKING_DB_PORT}/${BOOKING_DB_NAME}
+        username: ${BOOKING_DB_USER}
+        password: ${BOOKING_DB_PASSWORD}
     anomaly:
       cusum:
         payment_success_rate:

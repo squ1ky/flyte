@@ -1,4 +1,4 @@
-package com.flyte.analytics.stream.anomaly
+package com.flyte.analytics.anomaly
 
 object AnomalyMetricNames {
     const val PAYMENT_SUCCESS_RATE = "payment_success_rate"

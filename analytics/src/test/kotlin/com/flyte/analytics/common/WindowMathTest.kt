@@ -1,4 +1,4 @@
-package com.flyte.analytics.stream
+package com.flyte.analytics.common
 
 import java.time.Instant
 import kotlin.test.Test

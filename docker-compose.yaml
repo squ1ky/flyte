@@ -250,6 +250,8 @@ services:
     depends_on:
       analytics-db:
         condition: service_healthy
+      booking-db:
+        condition: service_healthy
       kafka:
         condition: service_healthy
     ports:

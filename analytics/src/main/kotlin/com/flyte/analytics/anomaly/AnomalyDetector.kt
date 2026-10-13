@@ -1,4 +1,4 @@
-package com.flyte.analytics.stream.anomaly
+package com.flyte.analytics.anomaly
 
 import java.time.Instant
 

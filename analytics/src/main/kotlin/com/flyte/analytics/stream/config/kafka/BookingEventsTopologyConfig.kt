@@ -2,8 +2,8 @@ package com.flyte.analytics.stream.config.kafka
 
 import com.flyte.analytics.stream.StreamProcessorNames
 import com.flyte.analytics.stream.StreamStoreNames
-import com.flyte.analytics.stream.anomaly.MetricAnomalyMonitor
-import com.flyte.analytics.stream.config.properties.AnalyticsWindowProperties
+import com.flyte.analytics.anomaly.MetricAnomalyMonitor
+import com.flyte.analytics.common.AnalyticsWindowProperties
 import com.flyte.analytics.stream.config.properties.BookingEventsConsumerKafkaProperties
 import com.flyte.analytics.stream.model.db.BookingWindowState
 import com.flyte.analytics.stream.model.kafka.BookingEventEnvelope

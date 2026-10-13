@@ -1,46 +1,26 @@
 package com.flyte.analytics.stream.config
 
-import com.flyte.analytics.stream.anomaly.AnomalyMetricNames
-import com.flyte.analytics.stream.anomaly.CusumDetector
-import com.flyte.analytics.stream.anomaly.CusumDirection
-import com.flyte.analytics.stream.anomaly.MetricAnomalyMonitor
-import com.flyte.analytics.stream.config.properties.AnomalyDetectionProperties
-import com.flyte.analytics.stream.repository.AnomalyRepository
-import org.springframework.boot.context.properties.EnableConfigurationProperties
+import com.flyte.analytics.anomaly.AnomalyApproach
+import com.flyte.analytics.anomaly.AnomalyMetricNames
+import com.flyte.analytics.anomaly.CusumMonitorFactory
+import com.flyte.analytics.anomaly.MetricAnomalyMonitor
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-@EnableConfigurationProperties(AnomalyDetectionProperties::class)
 class AnomalyDetectionConfig(
-    private val properties: AnomalyDetectionProperties,
-    private val anomalyRepository: AnomalyRepository,
+    private val monitorFactory: CusumMonitorFactory,
 ) {
 
     @Bean
     fun paymentSuccessRateMonitor(): MetricAnomalyMonitor =
-        cusumMonitor(AnomalyMetricNames.PAYMENT_SUCCESS_RATE)
+        monitorFactory.create(AnomalyMetricNames.PAYMENT_SUCCESS_RATE, AnomalyApproach.STREAM)
 
     @Bean
     fun conversionRateMonitor(): MetricAnomalyMonitor =
-        cusumMonitor(AnomalyMetricNames.CONVERSION_RATE)
+        monitorFactory.create(AnomalyMetricNames.CONVERSION_RATE, AnomalyApproach.STREAM)
 
     @Bean
     fun abandonmentRateExpiredMonitor(): MetricAnomalyMonitor =
-        cusumMonitor(AnomalyMetricNames.ABANDONMENT_RATE_EXPIRED)
-
-    private fun cusumMonitor(metricName: String): MetricAnomalyMonitor {
-        val params = properties.cusum[metricName]
-            ?: error("Missing flyte.analytics.anomaly.cusum.$metricName in configuration")
-        val direction = when (metricName) {
-            AnomalyMetricNames.ABANDONMENT_RATE_EXPIRED -> CusumDirection.UPPER
-            else -> CusumDirection.LOWER
-        }
-        val detector = CusumDetector(params.baseline, params.threshold, params.drift, direction)
-        return MetricAnomalyMonitor(detector, anomalyRepository, metricName, ALGORITHM)
-    }
-
-    companion object {
-        private const val ALGORITHM = "cusum"
-    }
+        monitorFactory.create(AnomalyMetricNames.ABANDONMENT_RATE_EXPIRED, AnomalyApproach.STREAM)
 }

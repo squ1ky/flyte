@@ -1,8 +1,8 @@
 package com.flyte.analytics.stream.processor
 
 import com.flyte.analytics.stream.StreamStoreNames
-import com.flyte.analytics.stream.WindowMath
-import com.flyte.analytics.stream.anomaly.MetricAnomalyMonitor
+import com.flyte.analytics.common.WindowMath
+import com.flyte.analytics.anomaly.MetricAnomalyMonitor
 import com.flyte.analytics.stream.model.db.BookingStatus
 import com.flyte.analytics.stream.model.db.BookingWindowState
 import com.flyte.analytics.stream.model.kafka.BookingCancelledPayload
@@ -90,6 +90,12 @@ class BookingEventsWindowProcessor(
 
         store.put(envelope.bookingId, state.copy(status = BookingStatus.CANCELLED, cancelReason = payload.reason))
         val counts = metricsWindowsRepository.incrementCancelled(state.windowStart, windowSizeSeconds, payload.reason)
+
+        // conversion_rate is observed on every terminal outcome, not only on booking_paid:
+        // otherwise a total payment outage (zero booking_paid events) would never reach the detector.
+        rate(counts.paidCount, counts.createdCount)?.let { conversionRate ->
+            conversionRateMonitor.observe(conversionRate, payload.cancelledAt, state.windowStart)
+        }
 
         if (payload.reason == CancelReason.EXPIRED) {
             rate(counts.cancelledExpiredCount, counts.createdCount)?.let { abandonmentRate ->

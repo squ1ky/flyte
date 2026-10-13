@@ -1,4 +1,4 @@
-package com.flyte.analytics.stream.config.properties
+package com.flyte.analytics.common
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import java.time.Duration

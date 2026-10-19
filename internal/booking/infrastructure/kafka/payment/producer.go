@@ -21,6 +21,8 @@ func NewProducer(cfg config.KafkaConfig, log *slog.Logger) *Producer {
 		Addr:     kafka.TCP(cfg.Brokers...),
 		Topic:    cfg.TopicRequests,
 		Balancer: &kafka.LeastBytes{},
+		// Messages are written one at a time synchronously: the 1s default would delay each by up to 1s.
+		BatchTimeout: 10 * time.Millisecond,
 	}
 
 	return &Producer{

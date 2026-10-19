@@ -24,11 +24,13 @@ data class CohortObservation(
 /**
  * Turns successive batch snapshots of cohort counts into detector observations.
  *
- * Stream feeds the detector once per terminal event (conversion_rate on every paid/cancelled,
- * abandonment_rate_expired on every expired). To keep the comparison about delivery latency only,
- * batch feeds the same number of observations: one per terminal outcome that appeared since the
- * previous snapshot, using the rate from the current snapshot. Otherwise a CUSUM threshold would
- * mean "N events" for stream and "N polls" for batch, and the two would not be comparable.
+ * Stream feeds the detectors one 0/1 observation per terminal event: conversion_rate gets 1 for a
+ * paid booking, abandonment_rate_expired gets 1 for an expired one, both get 0 for any other outcome.
+ * Batch feeds exactly the same values: per window, as many 1s as new paid (expired) outcomes since
+ * the previous snapshot and as many 0s as the other new outcomes. Both approaches thus deliver the same
+ * multiset of observations to identical detectors; only the moment of delivery differs, which is what
+ * the experiment measures. booking-db has no terminal timestamp, so the order of outcomes within one
+ * window between two polls is unknown: 1s and 0s are spread evenly instead of grouped.
  *
  * The first snapshot only seeds the state: bookings that existed before the poller started are
  * history, not something batch has "just discovered".
@@ -50,18 +52,19 @@ class CohortDeltaTracker {
     }
 
     private fun observationsFor(current: CohortCounts, previous: CohortCounts?): List<CohortObservation> {
-        if (current.createdCount == 0) return emptyList()
+        val newTerminal = maxOf(current.terminalCount - (previous?.terminalCount ?: 0), 0)
+        val newPaid = maxOf(current.paidCount - (previous?.paidCount ?: 0), 0).coerceAtMost(newTerminal)
+        val newExpired = maxOf(current.cancelledExpiredCount - (previous?.cancelledExpiredCount ?: 0), 0)
+            .coerceAtMost(newTerminal)
 
-        val newTerminal = current.terminalCount - (previous?.terminalCount ?: 0)
-        val newExpired = current.cancelledExpiredCount - (previous?.cancelledExpiredCount ?: 0)
-
-        val conversionRate = current.paidCount.toDouble() / current.createdCount
-        val abandonmentRateExpired = current.cancelledExpiredCount.toDouble() / current.createdCount
-
-        return List(maxOf(newTerminal, 0)) {
-            CohortObservation(AnomalyMetricNames.CONVERSION_RATE, current.windowStart, conversionRate)
-        } + List(maxOf(newExpired, 0)) {
-            CohortObservation(AnomalyMetricNames.ABANDONMENT_RATE_EXPIRED, current.windowStart, abandonmentRateExpired)
+        return outcomes(newPaid, newTerminal).map {
+            CohortObservation(AnomalyMetricNames.CONVERSION_RATE, current.windowStart, it)
+        } + outcomes(newExpired, newTerminal).map {
+            CohortObservation(AnomalyMetricNames.ABANDONMENT_RATE_EXPIRED, current.windowStart, it)
         }
     }
+
+    /** [total] 0/1 values with [ones] 1s spread evenly among them (Bresenham-style). */
+    private fun outcomes(ones: Int, total: Int): List<Double> =
+        List(total) { i -> if ((i + 1L) * ones / total > i.toLong() * ones / total) 1.0 else 0.0 }
 }

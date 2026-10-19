@@ -1,7 +1,7 @@
 package com.flyte.analytics.stream.consumer
 
 import com.flyte.analytics.common.WindowMath
-import com.flyte.analytics.anomaly.MetricAnomalyMonitor
+import com.flyte.analytics.anomaly.MetricMonitorGroup
 import com.flyte.analytics.common.AnalyticsWindowProperties
 import com.flyte.analytics.stream.model.kafka.PaymentResult
 import com.flyte.analytics.stream.model.kafka.PaymentStatus
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component
 @Component
 class PaymentResultsConsumer(
     private val paymentErrorProfileRepository: PaymentErrorProfileRepository,
-    @Qualifier("paymentSuccessRateMonitor") private val paymentSuccessRateMonitor: MetricAnomalyMonitor,
+    @Qualifier("paymentSuccessRateMonitor") private val paymentSuccessRateMonitor: MetricMonitorGroup,
     private val windowProperties: AnalyticsWindowProperties
 ) {
 

@@ -29,30 +29,44 @@ class CohortDeltaTrackerTest {
         assertTrue(observations.isEmpty())
     }
 
+    private fun List<CohortObservation>.values(metric: String) = filter { it.metricName == metric }.map { it.value }
+
     @Test
-    fun `emits one conversion observation per new terminal outcome`() {
+    fun `emits one 0-1 outcome per metric per new terminal outcome, like stream`() {
         val tracker = CohortDeltaTracker()
         tracker.update(listOf(counts(w1, created = 4, paid = 1)))
 
         val observations = tracker.update(listOf(counts(w1, created = 4, paid = 2, paymentFailed = 2)))
 
-        val conversion = observations.filter { it.metricName == AnomalyMetricNames.CONVERSION_RATE }
-        assertEquals(3, conversion.size)
-        assertTrue(conversion.all { it.value == 0.5 && it.windowStart == w1 })
-        assertTrue(observations.none { it.metricName == AnomalyMetricNames.ABANDONMENT_RATE_EXPIRED })
+        // 3 new outcomes: 1 paid, 2 payment_failed.
+        assertEquals(listOf(0.0, 1.0, 0.0).sorted(), observations.values(AnomalyMetricNames.CONVERSION_RATE).sorted())
+        assertTrue(observations.all { it.windowStart == w1 })
+        // No expirations: abandonment is still observed (at its normal level, 0) so detectors learn it.
+        assertEquals(listOf(0.0, 0.0, 0.0), observations.values(AnomalyMetricNames.ABANDONMENT_RATE_EXPIRED))
     }
 
     @Test
-    fun `emits abandonment observation per new expired, in addition to conversion`() {
+    fun `expired outcomes are 1 for abandonment and 0 for conversion`() {
         val tracker = CohortDeltaTracker()
         tracker.update(listOf(counts(w1, created = 5)))
 
         val observations = tracker.update(listOf(counts(w1, created = 5, expired = 2)))
 
-        assertEquals(2, observations.count { it.metricName == AnomalyMetricNames.CONVERSION_RATE })
-        val abandonment = observations.filter { it.metricName == AnomalyMetricNames.ABANDONMENT_RATE_EXPIRED }
-        assertEquals(2, abandonment.size)
-        assertTrue(abandonment.all { it.value == 0.4 })
+        assertEquals(listOf(0.0, 0.0), observations.values(AnomalyMetricNames.CONVERSION_RATE))
+        assertEquals(listOf(1.0, 1.0), observations.values(AnomalyMetricNames.ABANDONMENT_RATE_EXPIRED))
+    }
+
+    @Test
+    fun `1s and 0s of one poll are spread evenly, not grouped`() {
+        val tracker = CohortDeltaTracker()
+        tracker.update(listOf(counts(w1, created = 10)))
+
+        val observations = tracker.update(listOf(counts(w1, created = 10, paid = 5, paymentFailed = 5)))
+
+        assertEquals(
+            listOf(0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0),
+            observations.values(AnomalyMetricNames.CONVERSION_RATE),
+        )
     }
 
     @Test
@@ -64,7 +78,7 @@ class CohortDeltaTrackerTest {
             listOf(counts(w1, created = 1, paid = 1), counts(w2, created = 3, paid = 1, paymentFailed = 1))
         )
 
-        assertEquals(2, observations.size)
+        assertEquals(4, observations.size)
         assertTrue(observations.all { it.windowStart == w2 })
     }
 

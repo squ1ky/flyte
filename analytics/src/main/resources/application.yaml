@@ -34,7 +34,7 @@ flyte:
     window-size: 60s
     batch:
       enabled: ${ANALYTICS_BATCH_ENABLED:true}
-      # Typical batch cycle, experiment parameter (CLAUDE.md 6.4).
+      # Typical batch cycle, experiment parameter.
       poll-interval: ${ANALYTICS_BATCH_POLL_INTERVAL:60s}
       # Must cover RESERVATION_TTL + BOOKING_CLEANER_INTERVAL, otherwise expired outcomes
       # land in windows the batch no longer looks at.
@@ -44,19 +44,64 @@ flyte:
         username: ${BOOKING_DB_USER}
         password: ${BOOKING_DB_PASSWORD}
     anomaly:
+      # Every listed algorithm gets its own detector on every metric, in stream and in batch.
+      # Supported: cusum, ewma, page_hinkley.
+      algorithms: ${ANALYTICS_ANOMALY_ALGORITHMS:cusum,ewma,page_hinkley}
+      # Every metric is one 0/1 observation per event (payment, booking outcome), so parameters are
+      # calibrated by Monte Carlo on Bernoulli(p) with p measured on a live baseline (DetectorCalibrationTest,
+      # keep in sync): < 1% false positives per 3-minute baseline at 0.5 bookings/s for every algorithm.
+      # p: payment_success_rate 0.80 (FAKE_BANK_SUCCESS_CHANCE), conversion_rate 0.76 (measured 0.760 =
+      # 0.8 x 0.95 user cancellations), abandonment_rate_expired 0 (no expirations in normal operation).
       cusum:
         payment_success_rate:
           baseline: 0.80
-          threshold: 5.0
-          drift: 0.01
+          threshold: 8.0
+          drift: 0.05
         conversion_rate:
-          baseline: 0.80
-          threshold: 5.0
-          drift: 0.02
+          baseline: 0.76
+          threshold: 8.0
+          # 0.05 would give 1.4% false positives, several times more than EWMA / Page-Hinkley.
+          drift: 0.07
         abandonment_rate_expired:
           baseline: 0.0
           threshold: 3.0
           drift: 0.01
+      ewma:
+        payment_success_rate:
+          baseline: 0.80
+          # Bernoulli(0.8): sqrt(0.8 * 0.2)
+          sigma: 0.40
+          lambda: 0.05
+          width: 4.0
+        conversion_rate:
+          baseline: 0.76
+          # Bernoulli(0.76): sqrt(0.76 * 0.24)
+          sigma: 0.427
+          lambda: 0.05
+          width: 4.0
+        abandonment_rate_expired:
+          baseline: 0.0
+          # The normal level is exactly 0 (sigma 0), so the textbook limit degenerates. sigma is set so that
+          # the limit (~0.30) is crossed on the 4th expiration in a row, like CUSUM and Page-Hinkley below.
+          sigma: 0.44
+          lambda: 0.1
+          width: 3.0
+      page-hinkley:
+        payment_success_rate:
+          threshold: 8.0
+          delta: 0.05
+          alpha: 0.99
+          min-observations: 30
+        conversion_rate:
+          threshold: 8.0
+          delta: 0.05
+          alpha: 0.99
+          min-observations: 30
+        abandonment_rate_expired:
+          threshold: 3.0
+          delta: 0.01
+          alpha: 0.99
+          min-observations: 30
   kafka:
     consumer:
       booking-events:

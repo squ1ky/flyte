@@ -2,7 +2,7 @@ package com.flyte.analytics.stream.config.kafka
 
 import com.flyte.analytics.stream.StreamProcessorNames
 import com.flyte.analytics.stream.StreamStoreNames
-import com.flyte.analytics.anomaly.MetricAnomalyMonitor
+import com.flyte.analytics.anomaly.MetricMonitorGroup
 import com.flyte.analytics.common.AnalyticsWindowProperties
 import com.flyte.analytics.stream.config.properties.BookingEventsConsumerKafkaProperties
 import com.flyte.analytics.stream.model.db.BookingWindowState
@@ -31,8 +31,8 @@ class BookingEventsTopologyConfig(
     private val windowProperties: AnalyticsWindowProperties,
     private val kafkaProperties: BookingEventsConsumerKafkaProperties,
     private val metricsWindowsRepository: MetricsWindowsRepository,
-    @Qualifier("conversionRateMonitor") private val conversionRateMonitor: MetricAnomalyMonitor,
-    @Qualifier("abandonmentRateExpiredMonitor") private val abandonmentRateExpiredMonitor: MetricAnomalyMonitor,
+    @Qualifier("conversionRateMonitor") private val conversionRateMonitor: MetricMonitorGroup,
+    @Qualifier("abandonmentRateExpiredMonitor") private val abandonmentRateExpiredMonitor: MetricMonitorGroup,
 ) {
 
     @PostConstruct

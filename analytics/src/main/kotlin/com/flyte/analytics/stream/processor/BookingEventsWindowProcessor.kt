@@ -2,7 +2,7 @@ package com.flyte.analytics.stream.processor
 
 import com.flyte.analytics.stream.StreamStoreNames
 import com.flyte.analytics.common.WindowMath
-import com.flyte.analytics.anomaly.MetricAnomalyMonitor
+import com.flyte.analytics.anomaly.MetricMonitorGroup
 import com.flyte.analytics.stream.model.db.BookingStatus
 import com.flyte.analytics.stream.model.db.BookingWindowState
 import com.flyte.analytics.stream.model.kafka.BookingCancelledPayload
@@ -19,12 +19,13 @@ import org.apache.kafka.streams.processor.api.ProcessorContext
 import org.apache.kafka.streams.processor.api.Record
 import org.apache.kafka.streams.state.KeyValueStore
 import java.time.Duration
+import java.time.Instant
 
 class BookingEventsWindowProcessor(
     private val windowSize: Duration,
     private val metricsWindowsRepository: MetricsWindowsRepository,
-    private val conversionRateMonitor: MetricAnomalyMonitor,
-    private val abandonmentRateExpiredMonitor: MetricAnomalyMonitor,
+    private val conversionRateMonitor: MetricMonitorGroup,
+    private val abandonmentRateExpiredMonitor: MetricMonitorGroup,
 ) : ContextualProcessor<String, BookingEventEnvelope, Void, Void>() {
 
     private val log: KLogger = KotlinLogging.logger {}
@@ -70,11 +71,8 @@ class BookingEventsWindowProcessor(
         }
 
         store.put(envelope.bookingId, state.copy(status = BookingStatus.PAID))
-        val counts = metricsWindowsRepository.incrementPaid(state.windowStart, windowSizeSeconds)
-
-        rate(counts.paidCount, counts.createdCount)?.let { conversionRate ->
-            conversionRateMonitor.observe(conversionRate, payload.paidAt, state.windowStart)
-        }
+        metricsWindowsRepository.incrementPaid(state.windowStart, windowSizeSeconds)
+        observeOutcome(paid = true, expired = false, payload.paidAt, state.windowStart)
     }
 
     private fun handleCancelled(envelope: BookingEventEnvelope) {
@@ -89,21 +87,21 @@ class BookingEventsWindowProcessor(
         }
 
         store.put(envelope.bookingId, state.copy(status = BookingStatus.CANCELLED, cancelReason = payload.reason))
-        val counts = metricsWindowsRepository.incrementCancelled(state.windowStart, windowSizeSeconds, payload.reason)
-
-        // conversion_rate is observed on every terminal outcome, not only on booking_paid:
-        // otherwise a total payment outage (zero booking_paid events) would never reach the detector.
-        rate(counts.paidCount, counts.createdCount)?.let { conversionRate ->
-            conversionRateMonitor.observe(conversionRate, payload.cancelledAt, state.windowStart)
-        }
-
-        if (payload.reason == CancelReason.EXPIRED) {
-            rate(counts.cancelledExpiredCount, counts.createdCount)?.let { abandonmentRate ->
-                abandonmentRateExpiredMonitor.observe(abandonmentRate, payload.cancelledAt, state.windowStart)
-            }
-        }
+        metricsWindowsRepository.incrementCancelled(state.windowStart, windowSizeSeconds, payload.reason)
+        observeOutcome(paid = false, expired = payload.reason == CancelReason.EXPIRED, payload.cancelledAt, state.windowStart)
     }
 
-    private fun rate(numerator: Int, createdCount: Int): Double? =
-        if (createdCount == 0) null else numerator.toDouble() / createdCount
+    /**
+     * Detectors see the outcome of each booking (1/0), not the window ratio paid/created: that ratio
+     * is observed while the window still holds PENDING bookings, so its normal level depends on when it
+     * is looked at (stream ~0.47, batch ~0.72 on a live baseline) and no shared detector parameters fit
+     * both approaches. The mean of the 0/1 outcomes is the conversion (expiry share) among resolved
+     * bookings, the same for stream and batch; batch feeds the same values (CohortDeltaTracker).
+     * Both metrics are observed on every outcome, so a total payment outage (no booking_paid at all)
+     * still reaches the detector and Page-Hinkley learns the normal expiry level (0).
+     */
+    private fun observeOutcome(paid: Boolean, expired: Boolean, timestamp: Instant, windowStart: Instant) {
+        conversionRateMonitor.observe(if (paid) 1.0 else 0.0, timestamp, windowStart)
+        abandonmentRateExpiredMonitor.observe(if (expired) 1.0 else 0.0, timestamp, windowStart)
+    }
 }

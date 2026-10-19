@@ -2,8 +2,8 @@ package com.flyte.analytics.batch.config
 
 import com.flyte.analytics.anomaly.AnomalyApproach
 import com.flyte.analytics.anomaly.AnomalyMetricNames
-import com.flyte.analytics.anomaly.CusumMonitorFactory
-import com.flyte.analytics.anomaly.MetricAnomalyMonitor
+import com.flyte.analytics.anomaly.AnomalyMonitorFactory
+import com.flyte.analytics.anomaly.MetricMonitorGroup
 import com.flyte.analytics.batch.BatchBaselinePoller
 import com.flyte.analytics.batch.repository.BookingCohortRepository
 import com.flyte.analytics.common.AnalyticsWindowProperties
@@ -22,7 +22,7 @@ import javax.sql.DataSource
 class BatchBaselineConfig(
     private val properties: BatchBaselineProperties,
     private val windowProperties: AnalyticsWindowProperties,
-    private val monitorFactory: CusumMonitorFactory,
+    private val monitorFactory: AnomalyMonitorFactory,
 ) {
 
     // defaultCandidate = false: the analytics-db DataSource must stay the only candidate for
@@ -41,11 +41,11 @@ class BatchBaselineConfig(
             }
 
     @Bean
-    fun batchConversionRateMonitor(): MetricAnomalyMonitor =
+    fun batchConversionRateMonitor(): MetricMonitorGroup =
         monitorFactory.create(AnomalyMetricNames.CONVERSION_RATE, AnomalyApproach.BATCH)
 
     @Bean
-    fun batchAbandonmentRateExpiredMonitor(): MetricAnomalyMonitor =
+    fun batchAbandonmentRateExpiredMonitor(): MetricMonitorGroup =
         monitorFactory.create(AnomalyMetricNames.ABANDONMENT_RATE_EXPIRED, AnomalyApproach.BATCH)
 
     @Bean(initMethod = "start", destroyMethod = "stop")

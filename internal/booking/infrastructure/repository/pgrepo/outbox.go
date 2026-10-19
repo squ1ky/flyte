@@ -21,7 +21,7 @@ func (r *OutboxRepo) Insert(ctx context.Context, event outbox.Event) error {
 		VALUES (:id, :event_type, :payload, :status, :created_at)
 	`
 
-	if _, err := r.db.NamedQueryContext(ctx, query, &event); err != nil {
+	if _, err := r.db.NamedExecContext(ctx, query, &event); err != nil {
 		return fmt.Errorf("insert outbox event: %w", err)
 	}
 	return nil

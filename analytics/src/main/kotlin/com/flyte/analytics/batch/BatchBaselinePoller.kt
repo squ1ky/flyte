@@ -1,7 +1,7 @@
 package com.flyte.analytics.batch
 
 import com.flyte.analytics.anomaly.AnomalyMetricNames
-import com.flyte.analytics.anomaly.MetricAnomalyMonitor
+import com.flyte.analytics.anomaly.MetricMonitorGroup
 import com.flyte.analytics.batch.repository.BookingCohortRepository
 import com.flyte.analytics.common.WindowMath
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -21,8 +21,8 @@ class BatchBaselinePoller(
     private val pollInterval: Duration,
     private val lookback: Duration,
     private val windowSizeSeconds: Int,
-    private val conversionRateMonitor: MetricAnomalyMonitor,
-    private val abandonmentRateExpiredMonitor: MetricAnomalyMonitor,
+    private val conversionRateMonitor: MetricMonitorGroup,
+    private val abandonmentRateExpiredMonitor: MetricMonitorGroup,
 ) {
     private val log = KotlinLogging.logger {}
 

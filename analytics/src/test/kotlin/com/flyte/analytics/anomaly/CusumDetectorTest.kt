@@ -43,7 +43,7 @@ class CusumDetectorTest {
 
     @Test
     fun `UPPER direction does not fire while value stays at or below baseline`() {
-        val detector = CusumDetector(baseline = 0.0, threshold = 3.0, drift = 0.01, direction = CusumDirection.UPPER)
+        val detector = CusumDetector(baseline = 0.0, threshold = 3.0, drift = 0.01, direction = ChangeDirection.UPPER)
 
         repeat(50) {
             val result = detector.observe(0.0, now)
@@ -53,7 +53,7 @@ class CusumDetectorTest {
 
     @Test
     fun `UPPER direction fires when value sustains above baseline`() {
-        val detector = CusumDetector(baseline = 0.0, threshold = 3.0, drift = 0.01, direction = CusumDirection.UPPER)
+        val detector = CusumDetector(baseline = 0.0, threshold = 3.0, drift = 0.01, direction = ChangeDirection.UPPER)
 
         val results = (1..10).map { i -> detector.observe(1.0, now.plusSeconds(i.toLong())) }
 

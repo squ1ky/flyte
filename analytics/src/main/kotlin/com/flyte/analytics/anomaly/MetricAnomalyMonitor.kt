@@ -12,9 +12,9 @@ object AnomalyApproach {
 class MetricAnomalyMonitor(
     private val detector: AnomalyDetector,
     private val anomalyRepository: AnomalyRepository,
-    private val metricName: String,
-    private val algorithm: String,
-    private val approach: String,
+    val metricName: String,
+    val algorithm: String,
+    val approach: String,
 ) {
     private val log = KotlinLogging.logger {}
 
@@ -22,6 +22,7 @@ class MetricAnomalyMonitor(
 
     fun observe(value: Double, timestamp: Instant, windowStart: Instant) {
         val result = detector.observe(value, timestamp)
+        log.debug { "observe metric=$metricName algorithm=$algorithm approach=$approach value=$value score=${result.score}" }
 
         if (!result.isAnomaly) return
         if (!latched.compareAndSet(false, true)) return

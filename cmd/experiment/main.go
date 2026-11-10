@@ -89,6 +89,10 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	paymentDB, err := env.PostgresURL("PAYMENT_DB")
+	if err != nil {
+		return err
+	}
 	analyticsDB, err := env.PostgresURL("ANALYTICS_DB")
 	if err != nil {
 		return err
@@ -123,6 +127,12 @@ func run() error {
 	}
 	defer injector.Close()
 
+	probe, err := experiment.NewPaymentProbe(ctx, paymentDB)
+	if err != nil {
+		return err
+	}
+	defer probe.Close(context.Background())
+
 	results, err := experiment.NewResultWriter(*out)
 	if err != nil {
 		return err
@@ -147,7 +157,7 @@ func run() error {
 		Timeout:      scenario.Timeout,
 		Cooldown:     scenario.Cooldown,
 		PollInterval: *poll,
-	}, scenario, analytics, injector, traffic, results, logger)
+	}, scenario, analytics, probe, injector, traffic, results, logger)
 
 	if err := runner.Run(ctx); err != nil {
 		return err

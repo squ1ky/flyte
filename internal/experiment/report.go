@@ -21,6 +21,10 @@ type ReportRow struct {
 	Monitor      Monitor
 	Expected     bool
 	DeltaMs      int64 // only for status=detected
+	// DeltaEffectMs is t1 - t0_effect (first fault effect, see RESULTS.md 3.1);
+	// HasEffect is false for CSVs without the effect-based columns (then DeltaMs is the only latency).
+	DeltaEffectMs int64
+	HasEffect     bool
 }
 
 // ReadResults loads rows from one or more results CSV files written by ResultWriter.
@@ -82,6 +86,12 @@ func parseResults(r io.Reader) ([]ReportRow, error) {
 			if row.DeltaMs, err = strconv.ParseInt(rec[col["delta_ms"]], 10, 64); err != nil {
 				return nil, fmt.Errorf("line %d: delta_ms: %w", line+2, err)
 			}
+			if rec[col["delta_effect_ms"]] != "" {
+				if row.DeltaEffectMs, err = strconv.ParseInt(rec[col["delta_effect_ms"]], 10, 64); err != nil {
+					return nil, fmt.Errorf("line %d: delta_effect_ms: %w", line+2, err)
+				}
+				row.HasEffect = true
+			}
 		}
 		rows = append(rows, row)
 	}
@@ -89,6 +99,8 @@ func parseResults(r io.Reader) ([]ReportRow, error) {
 }
 
 // LatencyStats summarises detection times of one detector in one scenario, over all fault phases.
+// Median/Mean/Std/P25/P75/Min/Max use the effect-based delta (t1 - t0_effect) when the CSV
+// has it, and fall back to the injection-inclusive delta (t1 - t0) for old CSVs.
 type LatencyStats struct {
 	Scenario string
 	Monitor  Monitor
@@ -96,6 +108,19 @@ type LatencyStats struct {
 	Timeouts int
 	// Seconds, over detected runs only. Zero when nothing was detected.
 	Median, Mean, Std, P25, P75, Min, Max float64
+	// MedianInj/MeanInj are the injection-inclusive counterparts (t1 - t0), seconds.
+	// Zero when the CSV has no effect-based deltas.
+	MedianInj, MeanInj float64
+}
+
+// OverheadStats summarises the injection overhead t0_effect - t0 (container restart and
+// Kafka reconnection between "faulty container is up" and "first payment processed by it"),
+// one value per run, per scenario.
+type OverheadStats struct {
+	Scenario string
+	Runs     int
+	// Seconds.
+	Median, Mean, Min, Max float64
 }
 
 // FalsePositiveStats counts baseline-phase detections of one detector in one scenario.
@@ -116,6 +141,7 @@ type Report struct {
 	Latency        []LatencyStats
 	FalsePositives []FalsePositiveStats
 	StreamVsBatch  []StreamBatchPair
+	Overhead       []OverheadStats
 }
 
 type scenarioMonitor struct {
@@ -130,9 +156,11 @@ func BuildReport(rows []ReportRow) Report {
 	}
 	runsByScenario := map[string]map[runKey]bool{}
 	monitorsByScenario := map[string]map[Monitor]bool{}
-	deltas := map[scenarioMonitor][]float64{}
+	deltas := map[scenarioMonitor][]float64{}    // primary latency: effect-based when available
+	injDeltas := map[scenarioMonitor][]float64{} // injection-inclusive counterpart
 	timeouts := map[scenarioMonitor]int{}
 	falsePositives := map[scenarioMonitor]int{}
+	overheadByScenario := map[string]map[runKey]float64{}
 
 	for _, r := range rows {
 		if runsByScenario[r.Scenario] == nil {
@@ -147,7 +175,20 @@ func BuildReport(rows []ReportRow) Report {
 		case r.Phase == PhaseBaseline && r.Status == StatusFalsePositive:
 			falsePositives[key]++
 		case r.Phase == PhaseFault && r.Expected && r.Status == StatusDetected:
-			deltas[key] = append(deltas[key], float64(r.DeltaMs)/1000)
+			if r.HasEffect {
+				deltas[key] = append(deltas[key], float64(r.DeltaEffectMs)/1000)
+				injDeltas[key] = append(injDeltas[key], float64(r.DeltaMs)/1000)
+				if overheadByScenario[r.Scenario] == nil {
+					overheadByScenario[r.Scenario] = map[runKey]float64{}
+				}
+				// t0 and t0_effect are common to every monitor in the run; keep the first value seen.
+				rk := runKey{r.ExperimentID, r.Run}
+				if _, seen := overheadByScenario[r.Scenario][rk]; !seen {
+					overheadByScenario[r.Scenario][rk] = float64(r.DeltaMs-r.DeltaEffectMs) / 1000
+				}
+			} else {
+				deltas[key] = append(deltas[key], float64(r.DeltaMs)/1000)
+			}
 		case r.Phase == PhaseFault && r.Expected && r.Status == StatusTimeout:
 			timeouts[key]++
 		}
@@ -164,6 +205,10 @@ func BuildReport(rows []ReportRow) Report {
 	}
 	for _, key := range sortedKeys(awaited) {
 		s := latencyStats(deltas[key])
+		if inj := injDeltas[key]; len(inj) == len(deltas[key]) && len(inj) > 0 {
+			si := latencyStats(inj)
+			s.MedianInj, s.MeanInj = si.Median, si.Mean
+		}
 		s.Scenario, s.Monitor, s.Timeouts = key.Scenario, key.Monitor, timeouts[key]
 		report.Latency = append(report.Latency, s)
 	}
@@ -203,6 +248,19 @@ func BuildReport(rows []ReportRow) Report {
 			})
 		}
 	}
+
+	for scenario, byRun := range overheadByScenario {
+		values := make([]float64, 0, len(byRun))
+		for _, v := range byRun {
+			values = append(values, v)
+		}
+		s := latencyStats(values)
+		report.Overhead = append(report.Overhead, OverheadStats{
+			Scenario: scenario, Runs: len(values),
+			Median: s.Median, Mean: s.Mean, Min: s.Min, Max: s.Max,
+		})
+	}
+	sort.Slice(report.Overhead, func(i, j int) bool { return report.Overhead[i].Scenario < report.Overhead[j].Scenario })
 	return report
 }
 
@@ -263,17 +321,37 @@ func lessScenarioMonitor(a, b scenarioMonitor) bool {
 	return a.Approach > b.Approach // stream before batch
 }
 
-// WriteMarkdown renders the report as markdown tables (seconds, t1 - t0).
+// WriteMarkdown renders the report as markdown tables (seconds).
+// Latency is t1 - t0_effect (first fault effect) where available; the last two columns of
+// the latency table give the injection-inclusive counterpart (t1 - t0), and the overhead
+// table shows how large the injection mechanics (t0_effect - t0) were per run.
 func (r Report) WriteMarkdown(w io.Writer) error {
 	var b strings.Builder
 
 	b.WriteString("## Detection latency, s (fault phase, expected detectors)\n\n")
-	b.WriteString("| scenario | metric | algorithm | approach | detected | timeouts | median | mean | std | p25 | p75 | min | max |\n")
-	b.WriteString("|---|---|---|---|---|---|---|---|---|---|---|---|---|\n")
+	b.WriteString("latency = t1 - t0_effect (first fault effect); inj columns = t1 - t0 (injection, includes service restart)\n\n")
+	b.WriteString("| scenario | metric | algorithm | approach | detected | timeouts | median | mean | std | p25 | p75 | min | max | median_inj | mean_inj |\n")
+	b.WriteString("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n")
 	for _, s := range r.Latency {
-		fmt.Fprintf(&b, "| %s | %s | %s | %s | %d | %d | %s | %s | %s | %s | %s | %s | %s |\n",
+		medianInj, meanInj := "-", "-"
+		if s.MedianInj > 0 || s.MeanInj > 0 {
+			medianInj = fmt.Sprintf("%.1f", s.MedianInj)
+			meanInj = fmt.Sprintf("%.1f", s.MeanInj)
+		}
+		fmt.Fprintf(&b, "| %s | %s | %s | %s | %d | %d | %s | %s | %s | %s | %s | %s | %s | %s | %s |\n",
 			s.Scenario, s.Monitor.MetricName, s.Monitor.Algorithm, s.Monitor.Approach, s.Detected, s.Timeouts,
-			sec(s, s.Median), sec(s, s.Mean), sec(s, s.Std), sec(s, s.P25), sec(s, s.P75), sec(s, s.Min), sec(s, s.Max))
+			sec(s, s.Median), sec(s, s.Mean), sec(s, s.Std), sec(s, s.P25), sec(s, s.P75), sec(s, s.Min), sec(s, s.Max),
+			medianInj, meanInj)
+	}
+
+	if len(r.Overhead) > 0 {
+		b.WriteString("\n## Injection overhead (t0_effect - t0), s per run\n\n")
+		b.WriteString("| scenario | runs | median | mean | min | max |\n")
+		b.WriteString("|---|---|---|---|---|---|\n")
+		for _, o := range r.Overhead {
+			fmt.Fprintf(&b, "| %s | %d | %.1f | %.1f | %.1f | %.1f |\n",
+				o.Scenario, o.Runs, o.Median, o.Mean, o.Min, o.Max)
+		}
 	}
 
 	b.WriteString("\n## Stream vs batch, median s\n\n")
@@ -312,7 +390,7 @@ func (r Report) WriteMarkdown(w io.Writer) error {
 func (r Report) WriteLatencyCSV(w io.Writer) error {
 	out := csv.NewWriter(w)
 	header := []string{"scenario", "metric", "algorithm", "approach", "detected", "timeouts",
-		"median_s", "mean_s", "std_s", "p25_s", "p75_s", "min_s", "max_s"}
+		"median_s", "mean_s", "std_s", "p25_s", "p75_s", "min_s", "max_s", "median_inj_s", "mean_inj_s"}
 	if err := out.Write(header); err != nil {
 		return err
 	}
@@ -322,6 +400,7 @@ func (r Report) WriteLatencyCSV(w io.Writer) error {
 			s.Scenario, s.Monitor.MetricName, s.Monitor.Algorithm, s.Monitor.Approach,
 			strconv.Itoa(s.Detected), strconv.Itoa(s.Timeouts),
 			f(s.Median), f(s.Mean), f(s.Std), f(s.P25), f(s.P75), f(s.Min), f(s.Max),
+			f(s.MedianInj), f(s.MeanInj),
 		}); err != nil {
 			return err
 		}

@@ -22,10 +22,13 @@ type RunnerConfig struct {
 // Runner executes the protocol from CLAUDE.md 6.10 against the live system:
 // baseline -> inject (t0) -> wait for every expected detector (t1) or timeout -> rollback -> cooldown.
 // Stream and batch detectors observe the same traffic in the same run, so t1 - t0 is comparable.
+// Latency is reported against t0Effect (first fault effect) when the payment probe observed it;
+// t0 (faulty container up) is kept for reference, see RESULTS.md 3.1.
 type Runner struct {
 	cfg       RunnerConfig
 	scenario  Scenario
 	analytics *AnalyticsClient
+	probe     *PaymentProbe
 	injector  *ComposeInjector
 	traffic   *TrafficGenerator
 	results   *ResultWriter
@@ -36,13 +39,14 @@ func NewRunner(
 	cfg RunnerConfig,
 	scenario Scenario,
 	analytics *AnalyticsClient,
+	probe *PaymentProbe,
 	injector *ComposeInjector,
 	traffic *TrafficGenerator,
 	results *ResultWriter,
 	logger *slog.Logger,
 ) *Runner {
-	return &Runner{cfg: cfg, scenario: scenario, analytics: analytics, injector: injector,
-		traffic: traffic, results: results, logger: logger}
+	return &Runner{cfg: cfg, scenario: scenario, analytics: analytics, probe: probe,
+		injector: injector, traffic: traffic, results: results, logger: logger}
 }
 
 func (r *Runner) Run(ctx context.Context) error {
@@ -127,12 +131,26 @@ func (r *Runner) runOnce(ctx context.Context, run int) error {
 	}
 	// t0 = the faulty container is up. Injection start would also count compose's recreate time.
 	t0 := time.Now()
-	log.Info("fault active", "t0", t0.Format(time.RFC3339Nano), "clock_skew", skew)
+
+	// The fault only starts affecting the system when the restarted service processes its
+	// first payment: timestamp that row in payment-db and use it as the effect-based t0.
+	// On probe failure fall back to t0 rather than failing the run.
+	t0Effect := t0
+	if skewPayment, err := r.probe.ClockSkew(ctx); err != nil {
+		log.Warn("payment-db clock skew unavailable, effect-based t0 disabled", "error", err)
+	} else if first, err := r.probe.FirstPaymentAfter(ctx, t0.Add(skewPayment), 500*time.Millisecond, 90*time.Second); err != nil {
+		log.Warn("first fault effect not observed, effect-based t0 disabled", "error", err)
+	} else {
+		t0Effect = first.Add(-skewPayment)
+	}
+	log.Info("fault active", "t0", t0.Format(time.RFC3339Nano), "clock_skew", skew,
+		"t0_effect", t0Effect.Format(time.RFC3339Nano),
+		"injection_lag", t0Effect.Sub(t0).Round(time.Millisecond))
 
 	row := func(phase, status string, m Monitor, start time.Time) ResultRow {
 		return ResultRow{
 			ExperimentID: r.cfg.ExperimentID, Scenario: r.scenario.Name, Run: run, Phase: phase, Status: status,
-			Monitor: m, Expected: r.scenario.Expects(m.MetricName), T0: start, ClockSkew: skew,
+			Monitor: m, Expected: r.scenario.Expects(m.MetricName), T0: start, T0Effect: t0Effect, ClockSkew: skew,
 		}
 	}
 
@@ -159,6 +177,7 @@ func (r *Runner) runOnce(ctx context.Context, run int) error {
 			var res ResultRow
 			if t1.Before(t0) {
 				res = row(PhaseBaseline, StatusFalsePositive, d.Monitor, baselineStart)
+				res.T0Effect = time.Time{}
 				log.Warn("false positive before injection", "metric", d.MetricName, "approach", d.Approach, "algorithm", d.Algorithm)
 			} else {
 				res = row(PhaseFault, StatusDetected, d.Monitor, t0)
